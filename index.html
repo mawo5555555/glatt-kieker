@@ -102,6 +102,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 .cm small{color:var(--muted)}
 .cm.l0 .cd{background:var(--ok)}.cm.l1 .cd{background:var(--warn)}.cm.l2 .cd{background:var(--bad)}
 .cm.l1{border-color:var(--warn)}.cm.l2{border-color:var(--bad)}
+.al{margin-top:8px;border:1px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:8px 10px;font-size:.9rem}.al summary{font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -127,6 +128,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
       <input type="range" id="hr" min="0" max="47" value="0" step="1">
       <div class="strip" id="strip" aria-hidden="true"></div>
     </div>
+    <div id="alerts"></div>
     <div id="status" class="spin" hidden></div>
     <div id="error" class="err" hidden style="margin-top:8px"></div>
   </section>
@@ -176,7 +178,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.5",VDATE="25.11.2026";
+var VERSION="1.6",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -419,11 +421,30 @@ function run(rt,k0){
   compute(rt,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
     S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
-    setStatus("");show("sliderBox",true);show("result",true);drawAll();
+    setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
     setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
+  });
+}
+
+
+/* ---------- DWD-Warnungen (über Bright Sky) ---------- */
+var alertId=0;
+function loadAlerts(d){
+  var id=++alertId,box=$("alerts");box.innerHTML="";
+  var pts=[d.A,d.segs[Math.floor(d.segs.length/2)].pts[0],d.B].map(function(p){return Array.isArray(p)?{lat:p[1],lon:p[0]}:p});
+  Promise.all(pts.map(function(p){return fetchJson("https://api.brightsky.dev/alerts?lat="+p.lat.toFixed(3)+"&lon="+p.lon.toFixed(3),15000).catch(function(){return null})})).then(function(rs){
+    if(id!==alertId)return;
+    var seen={},out=[],now=Date.now();
+    rs.forEach(function(r){if(!r)return;r.alerts.forEach(function(a){
+      if(!/GLATT|GLÄTT|SCHNEE|FROST|NEBEL|WINTER/i.test(a.event_de)||new Date(a.expires)<now||seen[a.alert_id])return;
+      seen[a.alert_id]=1;out.push({e:a.event_de,s:a.severity,w:r.location.name_short||"",ex:a.expires,h:a.headline_de,x:a.description_de})})});
+    if(!out.length){if(rs.some(Boolean))box.appendChild(el("p",{class:"note",text:"DWD: keine amtliche Warnung vor Glätte, Schnee, Frost oder Nebel an der Strecke."}));return}
+    out.forEach(function(a){
+      var dt=el("details",{class:"al"}),sm=el("summary",{text:"DWD-Warnung: "+a.e+" (bis "+dayTime(a.ex)+")"});
+      dt.appendChild(sm);dt.appendChild(el("p",{class:"why",text:a.x}));box.appendChild(dt)});
   });
 }
 

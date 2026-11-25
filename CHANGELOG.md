@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.6 – 25.11.2026
+- DWD-Amtswarnungen (Glätte, Schnee, Frost, Nebel) entlang der Strecke, Quelle Bright Sky.
+
 ## Version 1.5 – 25.11.2026
 - Gewählte Orte werden sofort gespeichert (vorher nur nach „Speichern“) und bleiben nach Updates erhalten; Speicher wird dauerhaft angefordert.
 - „Strecke automatisch nach Uhrzeit wählen“ ist standardmäßig an; manuelles Antippen einer Strecke schaltet es nur für den Moment ab.
