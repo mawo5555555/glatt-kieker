@@ -277,6 +277,7 @@ body.sheetopen #mapstatus{display:none}
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
+<section class="card opt" aria-label="Kontrolle"><h2 class="sec">Vorhersage-Kontrolle</h2><p class="note" id="calSt">Lade …</p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
 </div></div>
 
@@ -306,7 +307,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.43",VDATE="25.11.2026";
+var VERSION="1.44",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -521,12 +522,14 @@ function spread(h,i){
   for(var j=0;j<n.length;j++){a=h["temperature_2m"+n[j]];v=a?a[i]:null;if(v!=null)m.push(v)}
   if(m.length<2)return 0;return Math.max.apply(null,m)-Math.min.apply(null,m);
 }
+var CAL=null;try{CAL=JSON.parse(localStorage.getItem("gk_cal")||"null")}catch(e){}
 function g(h,k,i,def){
   if(ENSW[k]){
-    var sum=0,w=0,vi=gI(h,k,i,null),a,v;
-    if(vi!=null){sum+=vi*2;w+=2}
-    a=h[k+"_ecmwf_ifs025"];v=a?a[i]:null;if(v!=null){sum+=v*1.2;w+=1.2}
-    a=h[k+"_gfs_seamless"];v=a?a[i]:null;if(v!=null){sum+=v*0.6;w+=0.6}
+    var cw=CAL&&CAL.apply&&CAL.w?CAL:null,bs=cw&&(k==="temperature_2m"||k==="dew_point_2m")?cw.b:null,
+        wi=cw?cw.w.i:2,we=cw?cw.w.e:1.2,wg=cw?cw.w.g:0.6,sum=0,w=0,vi=gI(h,k,i,null),a,v;
+    if(vi!=null){sum+=(vi-(bs?bs.i:0))*wi;w+=wi}
+    a=h[k+"_ecmwf_ifs025"];v=a?a[i]:null;if(v!=null){sum+=(v-(bs?bs.e:0))*we;w+=we}
+    a=h[k+"_gfs_seamless"];v=a?a[i]:null;if(v!=null){sum+=(v-(bs?bs.g:0))*wg;w+=wg}
     if(w>0)return sum/w;
   }
   var a=h[k+"_icon_d2"],v=a?a[i]:null;
@@ -937,6 +940,20 @@ function defSl(){return [{on:true,d:[1,2,3,4,5],h:5,m:0,r:0,dh:6,dm:30},{on:true
 var cfg=null;try{cfg=JSON.parse(ls(KEY)||"null")}catch(e){}
 if(!cfg||!cfg.slots)cfg={slots:defSl(),change:true};
 var API=function(){return (ls("gk_report")||"https://glaettekieker-api.mawo555.workers.dev").replace(/\/+$/,"")};
+function calShow(c){
+  var el=document.getElementById("calSt");if(!el)return;
+  if(!c||!c.n){el.textContent="Der Server sammelt noch Vergleichswerte (Vorhersage gegen Messung von DWD und Flughafen Berlin-Brandenburg). Das dauert einige Tage.";return}
+  var nm={i:"ICON",e:"ECMWF",g:"GFS"},o=[],k;
+  for(k in nm)if(c.n[k])o.push(nm[k]+": "+(c.b[k]>0?"+":"")+c.b[k]+" °C im Schnitt, Fehler ±"+c.mae[k]+" °C");
+  el.textContent=c.n.i+" Vergleiche über "+c.days+" Tage. "+o.join(" · ")+". "+(c.apply?"Gewichte werden automatisch angepasst (ICON "+c.w.i+", ECMWF "+c.w.e+", GFS "+c.w.g+").":"Noch nur Aufzeichnung, Anpassung startet nach 7 Tagen mit genug Daten.")
+}
+function calLoad(){
+  fetch(API()+"/calib").then(function(r){return r.json()}).then(function(d){
+    if(d&&d.cal){try{localStorage.setItem("gk_cal",JSON.stringify(d.cal))}catch(e){}CAL=d.cal.apply?d.cal:null}
+    calShow(d&&d.cal);
+  }).catch(function(){var el=document.getElementById("calSt");if(el)el.textContent="Kontrolle nicht erreichbar."});
+}
+calLoad();
 function supported(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window}
 function urlB64(b){var p="=".repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,"+").replace(/_/g,"/")),o=new Uint8Array(r.length),i;for(i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
 function post(path,body){return fetch(API()+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()})}

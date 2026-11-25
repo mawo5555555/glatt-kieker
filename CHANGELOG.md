@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.44 – 25.11.2026
+- Kontrollschleife: Der Server vergleicht stündlich die Vorhersage mit Messwerten (DWD, Flughafen BER) und stellt nach 7 Tagen die Modellgewichte automatisch nach. Ergebnis in den Optionen.
+
 ## Version 1.43 – 25.11.2026
 - Wettermodelle gemittelt (ICON, ECMWF, GFS), Warnung bei uneinigen Modellen.
 - Regenradar (DWD): Kachel „Radar 2 Std." und Radar-Ebene auf der Karte.
