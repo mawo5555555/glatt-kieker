@@ -296,7 +296,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.29",VDATE="25.11.2026";
+var VERSION="1.30",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -447,9 +447,16 @@ function applyAuto(force){
 /* ---------- Routing und Wetter ---------- */
 function route(a,b){
   var u="https://router.project-osrm.org/route/v1/driving/"+a.lon+","+a.lat+";"+b.lon+","+b.lat+"?overview=full&geometries=geojson&steps=false";
-  return fetchJson(u,40000).then(function(d){
+  var ck="gk_rt_"+[a.lat,a.lon,b.lat,b.lon].map(function(x){return (+x).toFixed(3)}).join("_");
+  function ask(t){return fetchJson(u,t).then(function(d){
     if(d.code!=="Ok"||!d.routes.length)throw new Error("Keine Route gefunden.");
+    try{ls(ck,JSON.stringify(d.routes[0]))}catch(e){}
     return d.routes[0];
+  })}
+  return ask(15000).catch(function(){return ask(25000)}).catch(function(err){
+    var c=null;try{c=JSON.parse(ls(ck)||"null")}catch(e){}
+    if(c&&c.geometry)return c;
+    throw err;
   });
 }
 function split(coords,segM){

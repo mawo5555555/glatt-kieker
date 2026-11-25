@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.30 – 25.11.2026
+- Strecke wird zwischengespeichert und bei Routing-Problemen erneut versucht. Die Karte hängt nicht mehr bei „Strecke wird geladen".
+
 ## Version 1.29 – 25.11.2026
 - Warn-Schilder auf der Karte sitzen über der Straße und zeigen mit einem Strich auf die Stelle, die Straße bleibt sichtbar.
 - Keine gestrichelte Luftlinie mehr hinter dem Tesla.
