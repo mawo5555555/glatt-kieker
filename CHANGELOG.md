@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.42 – 25.11.2026
+- Abgelehnter Tesla-Schlüssel wird gelöscht, die Kopplung startet dann automatisch; Tesla-Browser wird auch am Namen erkannt.
+
 ## Version 1.41 – 25.11.2026
 - Tesla verbindet sich ohne Tippen: Tesla zeigt automatisch einen Code, das iPhone fragt „Zulassen?" mit Code-Vergleich.
 

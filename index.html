@@ -301,7 +301,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.41",VDATE="25.11.2026";
+var VERSION="1.42",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -822,14 +822,20 @@ $("pairSend").addEventListener("click",function(){
 })();
 (function(){
 var wide=window.matchMedia&&matchMedia("(min-width:900px) and (min-height:560px)").matches;
+var car=wide||/Tesla|QtCarBrowser/i.test(navigator.userAgent);
 var sh=$("pairShow"),pc=$("pairCode");if(!sh||!pc)return;
-if(!ls("gk_rk")&&wide){
+var started=false;
+function begin(){
+  if(started||ls("gk_rk"))return;started=true;
   var ban=document.createElement("div");ban.id="pairBan";ban.style.cssText="display:none;position:fixed;z-index:3000;left:50%;top:16px;transform:translateX(-50%);background:#14212b;color:#fff;border:2px solid #4aa8d0;border-radius:14px;padding:14px 22px;text-align:center;font-size:1.1rem;max-width:80vw";
   document.body.appendChild(ban);
   var upd=function(){var c=pc.textContent.trim();if(c&&!ls("gk_rk")){ban.style.display="block";ban.innerHTML="Tesla verbinden<br><b style='font-size:2.2rem;letter-spacing:.2em'>"+c+"</b><br>Öffne die App am iPhone und tippe auf „Zulassen“."}else{ban.style.display="none";if(!ls("gk_rk"))setTimeout(function(){if(!pc.textContent.trim()&&!ls("gk_rk"))sh.click()},3000)}};
   new MutationObserver(upd).observe(pc,{childList:true,characterData:true,subtree:true});
-  setTimeout(function(){if(!ls("gk_rk"))sh.click()},2500);
-}else if(!wide){
+  setTimeout(function(){if(!ls("gk_rk"))sh.click()},1500);
+}
+window.gkPairAuto=function(){if(car)begin()};
+if(car&&!ls("gk_rk"))setTimeout(begin,1500);
+if(!car){
   var asked={};
   var chk=function(){
     var k=ls("gk_rk");if(!k||document.hidden)return;
@@ -931,7 +937,7 @@ $("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0
 function loadTesla(){
   var rk=ls("gk_rk");if(!rk||!window.gkMap)return;
   function st(t){var e=$("rkSt");if(e)e.textContent=t}
-  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){if(r.status===401){st("Server lehnt den Schlüssel ab (401). Bitte Schlüssel neu eingeben.");gkLog("Fehler","Tesla: Schlüssel abgelehnt (401)");throw 0}if(!r.ok){st("Tesla-Abfrage fehlgeschlagen (HTTP "+r.status+").");gkLog("Fehler","Tesla: HTTP "+r.status);throw 0}return r.json()}).then(function(j){
+  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){if(r.status===401){try{localStorage.removeItem("gk_rk")}catch(x){}st("Schlüssel war ungültig und wurde gelöscht. Kopplung startet …");gkLog("Fehler","Tesla: Schlüssel abgelehnt (401), gelöscht");if(window.gkPairAuto)window.gkPairAuto();throw 0}if(!r.ok){st("Tesla-Abfrage fehlgeschlagen (HTTP "+r.status+").");gkLog("Fehler","Tesla: HTTP "+r.status);throw 0}return r.json()}).then(function(j){
     var p=j.probes||[],T=p[0]||null,lay=window.gkTeslaLayer;window.gkTesla=T;
     if(!T)st("Keine Tesla-Daten der letzten 24 Stunden auf dem Server.");
     else st("Tesla-Daten ok: "+p.length+" Messungen, letzte vor "+Math.round((Date.now()-T.ts)/60000)+" Min. Karte: "+(lay?"bereit":"nicht bereit")+".");
