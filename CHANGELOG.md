@@ -1,5 +1,14 @@
 # Änderungen
 
+## Version 1.38 – 25.11.2026
+- Karte automatisch dunkel nach Sonnenuntergang, hell bei Tageslicht (Option: immer dunkel / immer hell).
+
+## Version 1.37 – 25.11.2026
+- Dunkle Kartenansicht (Option „Kartenansicht"), standardmäßig an auf großen Bildschirmen (Tesla) und bei dunklem Systemmodus.
+
+## Version 1.36 – 25.11.2026
+- Tesla-Status in den Optionen zeigt, warum der Tesla nicht erscheint (Schlüssel, Server, Daten).
+
 ## Version 1.35 – 25.11.2026
 - Neues App-Icon: Schneeflocke über Straße mit orangem Warnzeichen.
 

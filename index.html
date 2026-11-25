@@ -199,6 +199,7 @@ body.sheetopen #mapstatus{display:none}
 .riskpin div,.tesm div{font-size:15px;padding:6px 12px}
 }
 .tesm div{transform:translate(-50%,-50%);display:inline-block;background:#1e6fd9;color:#fff;font:700 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.darkmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.8)}.darkmap .leaflet-container{background:#1b1f24}
 </style>
 </head>
 <body>
@@ -267,6 +268,7 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p></section>
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
@@ -298,7 +300,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.35",VDATE="25.11.2026";
+var VERSION="1.38",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -790,6 +792,25 @@ $("logCopy").addEventListener("click",function(){var b=$("logBox");b.select();tr
 $("logClear").addEventListener("click",function(){ls("gk_log","[]");window.gkLogRender()});
 window.gkLogRender();gkLog("Info","App gestartet, "+(navigator.onLine?"online":"offline"));
 (function(){
+var sel=$("darkMap"),nt=$("darkNote");if(!sel)return;
+var v=ls("gk_dark");if(v!=="1"&&v!=="0")v="auto";
+function sunUp(lat,lon,d){
+  var R=Math.PI/180,n=Math.floor((d-Date.UTC(d.getUTCFullYear(),0,0))/864e5),g=(2*Math.PI/365)*(n-1+(d.getUTCHours()-12)/24);
+  var eq=229.18*(.000075+.001868*Math.cos(g)-.032077*Math.sin(g)-.014615*Math.cos(2*g)-.040849*Math.sin(2*g));
+  var dc=.006918-.399912*Math.cos(g)+.070257*Math.sin(g)-.006758*Math.cos(2*g)+.000907*Math.sin(2*g)-.002697*Math.cos(3*g)+.00148*Math.sin(3*g);
+  var m=d.getUTCHours()*60+d.getUTCMinutes()+eq+4*lon,ha=(m/4-180)*R,la=lat*R;
+  var el=Math.asin(Math.sin(la)*Math.sin(dc)+Math.cos(la)*Math.cos(dc)*Math.cos(ha))/R;
+  return el>-0.833;
+}
+function ap(){
+  var dark=v==="1"?true:v==="0"?false:!sunUp(53.0,13.1,new Date());
+  document.documentElement.classList.toggle("darkmap",dark);sel.value=v;
+  nt.textContent=v==="auto"?"Aktuell: "+(dark?"dunkel (Sonne ist unter dem Horizont).":"hell (Tageslicht)."):(dark?"Immer dunkel.":"Immer hell.");
+}
+sel.addEventListener("change",function(){v=sel.value;ls("gk_dark",v);ap();gkLog("Info","Kartenansicht: "+v)});
+ap();setInterval(ap,60000);
+})();
+(function(){
 var PUB="BNW0uRCX4Hm10Aby2CxKaQMa-gASEmKa9b3SMEeIEj3g-8sQ2HtMaTgOpQWdULk6VT9C_izJsWLzyn6CxqdBGBQ",KEY="gk_push",DN2=["So","Mo","Di","Mi","Do","Fr","Sa"],ORDER=[1,2,3,4,5,6,0];
 var box=$("pushBox"),note=$("pushNote");if(!box)return;
 function defSl(){return [{on:true,d:[1,2,3,4,5],h:5,m:0,r:0,dh:6,dm:30},{on:true,d:[1,2,3,5],h:12,m:0,r:1,dh:13,dm:0},{on:true,d:[4],h:17,m:0,r:1,dh:17,dm:0}]}
@@ -855,8 +876,11 @@ $("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0
 (function(){var m=location.hash.match(/rk=([0-9a-f]{16,64})/);if(m){ls("gk_rk",m[1]);history.replaceState(null,"",location.pathname+location.search)}})();
 function loadTesla(){
   var rk=ls("gk_rk");if(!rk||!window.gkMap)return;
-  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){return r.json()}).then(function(j){
+  function st(t){var e=$("rkSt");if(e)e.textContent=t}
+  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){if(r.status===401){st("Server lehnt den Schlüssel ab (401). Bitte Schlüssel neu eingeben.");gkLog("Fehler","Tesla: Schlüssel abgelehnt (401)");throw 0}if(!r.ok){st("Tesla-Abfrage fehlgeschlagen (HTTP "+r.status+").");gkLog("Fehler","Tesla: HTTP "+r.status);throw 0}return r.json()}).then(function(j){
     var p=j.probes||[],T=p[0]||null,lay=window.gkTeslaLayer;window.gkTesla=T;
+    if(!T)st("Keine Tesla-Daten der letzten 24 Stunden auf dem Server.");
+    else st("Tesla-Daten ok: "+p.length+" Messungen, letzte vor "+Math.round((Date.now()-T.ts)/60000)+" Min. Karte: "+(lay?"bereit":"nicht bereit")+".");
     if(window.gkRedrawInfo)window.gkRedrawInfo();
     if(!lay||!T)return;lay.clearLayers();
     var recent=p.filter(function(x){return T.ts-x.ts<2*3600e3});
@@ -868,7 +892,7 @@ function loadTesla(){
       L.marker([T.lat,T.lon],{icon:carIcon(-90),zIndexOffset:1100}).bindTooltip("Tesla geparkt "+tm+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
     }
     if(window.gkCarM&&window.gkCarM._map)window.gkCarM.remove();
-  }).catch(function(){});
+  }).catch(function(e){if(e!==0){$("rkSt")&&($("rkSt").textContent="Tesla: Netzfehler "+(e&&e.message||e));gkLog("Fehler","Tesla: "+(e&&e.message||e))}});
 }
 window.loadTeslaDeferred=loadTesla;setInterval(function(){if(!document.hidden)loadTesla()},15000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadTesla()});
 })();
