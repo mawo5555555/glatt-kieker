@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.33 – 25.11.2026
+- Wetterdaten und Strecke werden auf dem Gerät zwischengespeichert (40 Min.). Weniger Abrufe beim Wetterdienst, schnellerer Start, kein Hängen mehr, wenn der Dienst sein Stundenlimit erreicht hat.
+- Verständliche Meldung bei Stundenlimit des Wetterdienstes.
+
 ## Version 1.32 – 25.11.2026
 - Tesla-Standort alle 15 Sekunden neu geholt und sofort beim Zurückkehren in die App.
 
