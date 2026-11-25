@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.16 – 25.11.2026
+- Auto auf der Mini-Karte ist ein weißes Tesla Model 3 (Draufsicht).
+
 ## Version 1.15 – 25.11.2026
 - Warnungen und Niederschlag werden jetzt an 8 bzw. 5 Punkten entlang der Strecke geprüft, nicht nur Start, Mitte, Ziel.
 
