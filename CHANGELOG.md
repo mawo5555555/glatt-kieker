@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.22 – 25.11.2026
+- Meine Fahrten (48 Std.) als Chips oben auf der Karte, Tippen wählt die Fahrt.
+- Gefährliche Abschnitte werden direkt auf der Karte beschriftet (Vorsicht/Gefahr mit Grund).
+- Kleine Sheet-Stufe zeigt ohne Begrüßung gleich die Ampel.
+
 ## Version 1.21 – 25.11.2026
 - Karte im Mittelpunkt: Vollbild-Karte (verschiebbar, zoombar), Infos in einem Bottom-Sheet mit drei Stufen (klein, mittel, groß). Knöpfe für Richtung, Luftbild und Strecke zentrieren schweben über dem Sheet.
 
