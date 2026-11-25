@@ -312,7 +312,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.45",VDATE="25.11.2026";
+var VERSION="1.46",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -1278,7 +1278,7 @@ function drawMini(){
   var runs=[],cur=null;
   S.segs.forEach(function(s,i){var lv=s.lv[hour]||0;if(lv>=1){if(!cur){cur={a:i,b:i,lv:lv,why:s.why[hour]||""};runs.push(cur)}else{cur.b=i;if(lv>cur.lv){cur.lv=lv;cur.why=s.why[hour]||""}}}else cur=null});
   runs.sort(function(x,y){return y.lv-x.lv||(y.b-y.a)-(x.b-x.a)}).slice(0,4).forEach(function(r){
-    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],t=(r.lv>1?"Gefahr: ":"Vorsicht: ")+(r.why||"").replace(/[.:].*$/,"").replace(/^Nachhall/,"Restglätte").slice(0,26);
+    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],t=(r.lv>1?"Gefahr: ":"Vorsicht: ")+(r.why||"").replace(/^Wettermodelle uneinig.*$/,"Modelle uneinig").replace(/[.:].*$/,"").replace(/^Nachhall/,"Restglätte").slice(0,26);
     L.marker([p[1],p[0]],{icon:L.divIcon({className:"riskpin",html:'<div style="background:'+COL[r.lv]+'">'+(r.lv>1?"!! ":"! ")+t.replace(/^(Gefahr|Vorsicht): /,"")+'</div>',iconSize:[0,0]}),zIndexOffset:900}).addTo(mini);
   });
   (S.alerts||[]).forEach(function(a){

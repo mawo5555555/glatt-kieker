@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.46 – 25.11.2026
+- Kartenhinweis „Wettermodelle uneinig“ wird nicht mehr abgeschnitten (kurz: „Modelle uneinig“).
+
 ## Version 1.45 – 25.11.2026
 - Schlitten: Glitzerspur bei Fahrt, laufende Rentiere, Laterne bei Dunkelheit, Rudolfs Nase leuchtet/blinkt bei Glättewarnung, geparkt mit Schneedecke, weihnachtliche Texte (Dez./Anfang Jan.), optional leichter Schneefall auf der Karte (Optionen).
 - Weihnachtsschlitten statt Auto-Symbol: Weihnachtsmann mit Geschenken, zwei Rentiere (eins mit roter Nase).
