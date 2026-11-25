@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.5 – 25.11.2026
+- Gewählte Orte werden sofort gespeichert (vorher nur nach „Speichern“) und bleiben nach Updates erhalten; Speicher wird dauerhaft angefordert.
+- „Strecke automatisch nach Uhrzeit wählen“ ist standardmäßig an; manuelles Antippen einer Strecke schaltet es nur für den Moment ab.
+
 ## Version 1.4 – 25.11.2026
 - Neu: „Meine Fahrten“ – Status für die festen Pendelzeiten (Hin Mo–Fr 6:30; Rück Mo/Di/Mi/Fr 13:00, Do 17:00) der nächsten 48 Stunden mit Ampelfarbe; Tippen öffnet die Fahrt.
 

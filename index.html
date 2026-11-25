@@ -176,7 +176,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.4",VDATE="25.11.2026";
+var VERSION="1.5",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -267,9 +267,9 @@ function defaults(){return [
 function loadRoutes(){
   try{var r=JSON.parse(ls("gk_routes")||"null");if(r&&r.length)routes=r}catch(e){}
   if(!routes.length)routes=defaults();
-  var a=ls("gk_auto");auto=a===null?true:a==="1";
+  var a=ls("gk_auto2");auto=a===null?true:a==="1";
 }
-function saveRoutes(){ls("gk_routes",JSON.stringify(routes));ls("gk_auto",auto?"1":"0")}
+function saveRoutes(){ls("gk_routes",JSON.stringify(routes))}
 function pick(h){
   for(var i=0;i<routes.length;i++){var r=routes[i];if(h>=r.h0&&h<r.h1)return i}
   return 0;
@@ -279,7 +279,7 @@ function renderTabs(){
   var t=$("tabs");t.innerHTML="";
   routes.forEach(function(r,i){
     var b=el("button",{type:"button","aria-pressed":String(i===active&&!adhocRoute),text:r.name+": "+r.from.n+" → "+r.to.n});
-    b.addEventListener("click",function(){auto=false;$("auto").checked=false;saveRoutes();selectRoute(i)});
+    b.addEventListener("click",function(){auto=false;$("auto").checked=false;selectRoute(i)});
     t.appendChild(b);
   });
 }
@@ -290,7 +290,7 @@ function renderRoutes(){
     sm.appendChild(el("span",{class:"nm",text:r.name+": "+r.from.n+" → "+r.to.n}));sm.appendChild(el("span",{class:"km",text:hrsText(r)}));
     d.appendChild(sm);
     var nameIn=el("input",{type:"text",value:r.name,"aria-label":"Name der Strecke"});
-    var f=placeField("Start",r.from,function(p){r.from=p}),t=placeField("Ziel",r.to,function(p){r.to=p});
+    var f=placeField("Start",r.from,function(p){r.from=p;saveRoutes();renderTabs();if(i===active)applyAuto(true);renderCommute()}),t=placeField("Ziel",r.to,function(p){r.to=p;saveRoutes();renderTabs();if(i===active)applyAuto(true);renderCommute()});
     var s0=hourSel(r.h0,0,23),s1=hourSel(r.h1,1,24);
     var hr=el("div",{class:"hrs"},[el("span",{text:"Gilt von"}),s0,el("span",{text:"bis"}),s1,el("span",{text:"Uhr"})]);
     var sv=el("button",{type:"button",class:"go",text:"Speichern",style:"margin:0"}),dl=el("button",{type:"button",class:"danger",text:"Löschen"});
@@ -319,7 +319,7 @@ function renderAdhoc(){
   go.addEventListener("click",function(){
     var p=a.getPlace(),q=b.getPlace();
     if(!p||!q){setError("Bitte Start und Ziel über „Ändern“ und „Suchen“ wählen.");return}
-    adhocRoute={name:"Einmalige Strecke",from:p,to:q};auto=false;$("auto").checked=false;saveRoutes();
+    adhocRoute={name:"Einmalige Strecke",from:p,to:q};auto=false;$("auto").checked=false;
     window.scrollTo({top:0,behavior:"smooth"});run(adhocRoute);renderTabs();
   });
   box.appendChild(a);box.appendChild(b);box.appendChild(go);
@@ -458,7 +458,7 @@ function renderCommute(){
         b.appendChild(el("span",{class:"cd",text:SYM[it.lv]}));
         b.appendChild(el("b",{text:DN[it.wd]+" "+String(it.h).padStart(2,"0")+":"+String(it.min).padStart(2,"0")}));
         b.appendChild(el("small",{text:it.name+" · "+NAME[it.lv]}));
-        b.addEventListener("click",function(){auto=false;$("auto").checked=false;saveRoutes();adhocRoute=null;active=it.r;renderTabs();run(routes[it.r],it.k);window.scrollTo({top:0,behavior:"smooth"})});
+        b.addEventListener("click",function(){auto=false;$("auto").checked=false;adhocRoute=null;active=it.r;renderTabs();run(routes[it.r],it.k);window.scrollTo({top:0,behavior:"smooth"})});
         box.appendChild(b);
       });
     });
@@ -609,7 +609,7 @@ BG.set("idle",false);
 
 /* ---------- Bedienung ---------- */
 $("hr").addEventListener("input",function(e){hour=+e.target.value;if(S)drawAll()});
-$("auto").addEventListener("change",function(e){auto=e.target.checked;saveRoutes();if(auto)applyAuto(true)});
+$("auto").addEventListener("change",function(e){auto=e.target.checked;ls("gk_auto2",auto?"1":"0");if(auto)applyAuto(true)});
 $("addRoute").addEventListener("click",addRoute);
 $("ack").addEventListener("click",function(){ls("gk_ack","1");show("disc",false)});
 if(ls("gk_ack")!=="1")show("disc",true);
@@ -619,6 +619,7 @@ $("plat").textContent=ios?"iPhone: In Safari auf „Teilen“ tippen und „Zum 
   :and?"Android: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen. Push-Nachrichten kommen in einer späteren Version."
   :"Am Handy öffnen: iPhone über „Zum Home-Bildschirm“ in Safari, Android über „App installieren“ im Browser.";
 
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
 
 $("ver").textContent="Version "+VERSION;$("verFoot").textContent="Version "+VERSION+" vom "+VDATE+".";
