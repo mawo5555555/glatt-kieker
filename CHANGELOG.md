@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.28 – 25.11.2026
+- Neues Feld „Tesla live" in den Optionen: Tesla-Link oder Schlüssel einfügen. Nötig, weil die Home-Bildschirm-App den Link aus Safari nicht übernimmt.
+
 ## Version 1.27 – 25.11.2026
 - Kein simuliertes Auto mehr, das hin und her fährt. Mit Tesla-Link zeigt die Karte nur den echten Tesla (fährt: "jetzt", sonst: "geparkt" mit Uhrzeit).
 

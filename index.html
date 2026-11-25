@@ -266,6 +266,7 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
 </div></div>
 
@@ -294,7 +295,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.27",VDATE="25.11.2026";
+var VERSION="1.28",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -753,6 +754,8 @@ function loadReports(){
   }).catch(function(){});
 }
 window.loadReportsDeferred=loadReports;
+$("rkIn").value=ls("gk_rk")?"Gespeichert":"";$("rkSt").textContent=ls("gk_rk")?"Schlüssel ist gespeichert.":"Noch kein Schlüssel gespeichert.";
+$("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0-9a-f]{16,64})\s*$/);if(!m){$("rkSt").textContent="Kein gültiger Schlüssel erkannt.";return}ls("gk_rk",m[1]);$("rkIn").value="Gespeichert";$("rkSt").textContent="Gespeichert. Tesla wird geladen …";if(window.loadTeslaDeferred)window.loadTeslaDeferred()});
 (function(){var m=location.hash.match(/rk=([0-9a-f]{16,64})/);if(m){ls("gk_rk",m[1]);history.replaceState(null,"",location.pathname+location.search)}})();
 function loadTesla(){
   var rk=ls("gk_rk");if(!rk||!window.gkMap)return;
