@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.8 – 25.11.2026
+- Wetterfront wird nicht mehr als Text angezeigt, sondern fließt in die Bewertung ein (Stufe mindestens „Vorsicht“ ab Ankunft der Front).
+
 ## Version 1.7 – 25.11.2026
 - Niederschlags-Vorschau für die nächsten 2 Stunden (15-Minuten-Modelldaten, Start/Mitte/Ziel).
 - Wetterfront: Blick 50/100/150 km gegen die Höhenströmung (850 hPa), Hinweis auf heranziehenden Niederschlag oder Kaltluft.
