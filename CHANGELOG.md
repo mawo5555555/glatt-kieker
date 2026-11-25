@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.41 – 25.11.2026
+- Tesla verbindet sich ohne Tippen: Tesla zeigt automatisch einen Code, das iPhone fragt „Zulassen?" mit Code-Vergleich.
+
 ## Version 1.40 – 25.11.2026
 - Tesla koppeln: Code im Tesla anzeigen, am iPhone eingeben, Schlüssel wird automatisch übertragen.
 
