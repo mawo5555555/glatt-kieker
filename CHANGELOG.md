@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.10 – 25.11.2026
+- Name geändert in „Glätte-Kieker“.
+
 ## Version 1.9 – 25.11.2026
 - Begrüßung je nach Tageszeit.
 - Offline: letzter gespeicherter Stand wird mit Uhrzeit angezeigt, wenn das Netz fehlt.

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Glatt-Kieker</title>
+<title>Glätte-Kieker</title>
 <meta name="theme-color" content="#0b6e8a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Glatt-Kieker">
+<meta name="apple-mobile-web-app-title" content="Glätte-Kieker">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -111,12 +111,12 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <canvas id="bg" aria-hidden="true"></canvas>
 <main>
   <header>
-    <h1>Glatt-Kieker <span class="ver" id="ver"></span></h1>
+    <h1>Glätte-Kieker <span class="ver" id="ver"></span></h1>
   </header>
 
   <div class="card disc" id="disc" hidden>
     <h2>Bitte lesen</h2>
-    <p style="margin:0 0 6px;font-size:.92rem">Glatt-Kieker ist eine automatische Schätzung und <b>keine amtliche Warnung</b>. Glätte kann auch dort auftreten, wo die App „grün“ zeigt. Maßgeblich sind die Warnungen des Deutschen Wetterdienstes und deine eigene Einschätzung. Nutzung auf eigene Gefahr. Früher Prototyp, die Regeln sind noch nicht an Messwerten geprüft.</p>
+    <p style="margin:0 0 6px;font-size:.92rem">Glätte-Kieker ist eine automatische Schätzung und <b>keine amtliche Warnung</b>. Glätte kann auch dort auftreten, wo die App „grün“ zeigt. Maßgeblich sind die Warnungen des Deutschen Wetterdienstes und deine eigene Einschätzung. Nutzung auf eigene Gefahr. Früher Prototyp, die Regeln sind noch nicht an Messwerten geprüft.</p>
     <button class="go" id="ack">Verstanden</button>
   </div>
 
@@ -182,7 +182,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.9",VDATE="25.11.2026";
+var VERSION="1.10",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
