@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Glatt-Kieker</title>
+<meta name="theme-color" content="#0b6e8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Glatt-Kieker">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{
+  --bg:#f3f5f6; --card:#fff; --fg:#14212b; --muted:#5a6b78; --line:#d9e0e5; --accent:#0b6e8a;
+  --ok:#1f9d55; --warn:#e08a00; --bad:#d63a2f; --ok-bg:#e3f4ea; --warn-bg:#fdf0d8; --bad-bg:#fbe3e0;
+  --card-a:rgba(255,255,255,.84); --sky:#cfe6f2;
+  --font:-apple-system,system-ui,"Segoe UI",Roboto,sans-serif; color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1a21; --card:#18262f; --fg:#e8eef2; --muted:#9bb0bd; --line:#2b3d49; --accent:#4cc3e0;
+  --ok:#3cc47a; --warn:#f0a93a; --bad:#ff6b5f; --ok-bg:#16382a; --warn-bg:#40300f; --bad-bg:#44201c; --card-a:rgba(24,38,47,.80); --sky:#1b3a4d; color-scheme:dark}}
+*{box-sizing:border-box}
+html{background:linear-gradient(var(--sky),var(--bg) 70vh) no-repeat var(--bg);min-height:100%;transition:background .6s}
+body{margin:0;background:transparent;color:var(--fg);font:16px/1.45 var(--font);padding:12px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+#bg{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+main{position:relative;z-index:1;max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+h1{font-size:1.5rem;margin:0;letter-spacing:-.01em} h2{font-size:1rem;margin:0 0 8px}
+.ver{display:inline-block;vertical-align:middle;margin-left:6px;font-size:.72rem;font-weight:700;letter-spacing:.02em;color:var(--accent);border:1px solid var(--accent);border-radius:999px;padding:2px 8px}
+.sub,.note{color:var(--muted);font-size:.85rem;margin:2px 0 0}
+.card{background:var(--card-a);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+label.f{display:block;font-size:.8rem;color:var(--muted);margin:0 0 3px}
+input[type=text]{width:100%;font:inherit;font-size:16px;padding:11px 12px;min-height:46px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.row{display:flex;gap:8px;align-items:flex-end}
+.row>div{flex:1;min-width:0}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:10px;padding:10px 12px;min-height:46px}
+button.go{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600;width:100%;margin-top:10px}
+button.sm{min-height:40px;padding:6px 10px;font-size:.85rem}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.banner{border-radius:14px;padding:14px;display:flex;gap:12px;align-items:center}
+.banner.l0{background:var(--ok-bg)} .banner.l1{background:var(--warn-bg)} .banner.l2{background:var(--bad-bg)}
+.dot{width:44px;height:44px;border-radius:50%;flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:1.2rem}
+.l0 .dot{background:var(--ok)} .l1 .dot{background:var(--warn)} .l2 .dot{background:var(--bad)}
+.banner b{display:block;font-size:1.05rem} .banner span{font-size:.9rem;color:var(--muted)}
+#map{height:300px;border-radius:10px;background:var(--bg)}
+.lg{display:flex;gap:12px;flex-wrap:wrap;font-size:.8rem;color:var(--muted);padding-top:6px}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+.slider label{display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted);margin-bottom:4px}
+.slider label b{color:var(--fg)}
+input[type=range]{width:100%;min-height:44px;accent-color:var(--accent)}
+.strip{display:flex;height:10px;border-radius:5px;overflow:hidden}.strip i{flex:1}
+.wx{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.wx div.c{background:var(--bg);border-radius:10px;padding:10px}
+.wx .t{font-size:1.7rem;font-weight:700;line-height:1.1}
+.wx small{display:block;color:var(--muted);font-size:.8rem}
+.hours{display:flex;gap:6px;overflow-x:auto;padding:10px 0 2px;scrollbar-width:thin}
+.hours div{flex:none;width:54px;text-align:center;font-size:.8rem;background:var(--bg);border-radius:10px;padding:6px 2px}
+.hours b{display:block;font-size:.95rem}
+ul{list-style:none;margin:0;padding:0}
+li details{border-top:1px solid var(--line)} li:first-child details{border-top:0}
+summary{display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer;min-height:44px;list-style:none}
+summary::-webkit-details-marker{display:none}
+.pill{font-size:.75rem;font-weight:700;border-radius:999px;padding:2px 9px;color:#fff;flex:none}
+.pill.l0{background:var(--ok)}.pill.l1{background:var(--warn)}.pill.l2{background:var(--bad)}
+.nm{flex:1;min-width:0}.km{color:var(--muted);font-size:.85rem;flex:none}
+.why{padding:0 0 10px;color:var(--muted);font-size:.92rem;margin:0}
+.err{background:var(--bad-bg);border:1px solid var(--bad);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.disc{border-color:var(--warn)}
+[hidden]{display:none!important}
+.spin{color:var(--muted);font-size:.9rem;padding:8px 0}
+</style>
+</head>
+<body>
+<canvas id="bg" aria-hidden="true"></canvas>
+<main>
+  <header>
+    <h1>Glatt-Kieker <span class="ver" id="ver">Version 1.0</span></h1>
+    <p class="sub">Glätte- und Wetterschätzung für deine Strecke</p>
+  </header>
+
+  <div class="card disc" id="disc" hidden>
+    <h2>Bitte lesen</h2>
+    <p style="margin:0 0 6px;font-size:.92rem">Glatt-Kieker ist eine automatische Schätzung und <b>keine amtliche Warnung</b>. Glätte kann auch dort auftreten, wo die App „grün“ zeigt. Maßgeblich sind die Warnungen des Deutschen Wetterdienstes und deine eigene Einschätzung. Nutzung auf eigene Gefahr. Früher Prototyp, die Regeln sind noch nicht an Messwerten geprüft.</p>
+    <button class="go" id="ack">Verstanden</button>
+  </div>
+
+  <form class="card" id="form" autocomplete="off">
+    <div class="row">
+      <div><label class="f" for="from">Start</label><input type="text" id="from" value="Sonnenberg, Oberhavel" enterkeyhint="next"></div>
+      <button type="button" id="swap" title="Start und Ziel tauschen" aria-label="Start und Ziel tauschen">⇄</button>
+    </div>
+    <div style="margin-top:8px"><label class="f" for="to">Ziel</label><input type="text" id="to" value="Oranienburg" enterkeyhint="go"></div>
+    <button class="go" type="submit" id="goBtn">Strecke prüfen</button>
+    <div class="chips">
+      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Oranienburg">Sonnenberg → Oranienburg</button>
+      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Hamburg">→ Hamburg</button>
+      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Berlin">→ Berlin</button>
+    </div>
+  </form>
+
+  <div id="status" class="spin" hidden></div>
+  <div id="error" class="err" hidden></div>
+
+  <div id="result" hidden>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="banner l0" id="banner"><div class="dot" id="dot">✓</div><div><b id="bt"></b><span id="bs"></span></div></div>
+
+      <div class="card slider">
+        <label for="hr"><span>Abfahrt</span><b id="hl"></b></label>
+        <input type="range" id="hr" min="0" max="47" value="0" step="1">
+        <div class="strip" id="strip" aria-hidden="true"></div>
+        <p class="note" style="margin-top:6px">Farbband: schlechteste Stufe der Strecke je Abfahrtsstunde. Die Fahrzeit wird je Abschnitt berücksichtigt.</p>
+      </div>
+
+      <div class="card">
+        <h2>Wetter auf einen Blick</h2>
+        <div class="wx" id="wx"></div>
+        <div class="hours" id="hours"></div>
+        <p class="note" id="hoursNote"></p>
+      </div>
+
+      <div class="card">
+        <div id="map" role="img" aria-label="Streckenkarte"></div>
+        <div class="lg"><span><i style="background:var(--ok)"></i>unbedenklich</span><span><i style="background:var(--warn)"></i>Vorsicht</span><span><i style="background:var(--bad)"></i>Gefahr</span></div>
+      </div>
+
+      <div class="card"><h2 id="listH">Abschnitte</h2><ul id="list"></ul></div>
+    </div>
+  </div>
+
+  <div class="card"><h2>Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
+  <p class="note" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL) · Entwurfsregeln. <span id="verFoot"></span></p>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+"use strict";
+var VERSION="1.0",VDATE="25.11.2026";
+var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
+var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
+var $=function(i){return document.getElementById(i)};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+var S=null, hour=0, map=null, layer=null;
+
+/* ---------- Hilfen ---------- */
+function hav(a,b){var R=6371000,p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dp=p2-p1,dl=(b[0]-a[0])*Math.PI/180;
+  var x=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);return 2*R*Math.asin(Math.sqrt(x))}
+function dayTime(t){var d=new Date(t),w=["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()];return w+" "+String(d.getHours()).padStart(2,"0")+":00"}
+function berlinNowKey(){return new Date().toLocaleString("sv-SE",{timeZone:"Europe/Berlin"}).slice(0,13).replace(" ","T")+":00"}
+function wmo(c){
+  var m={0:["☀️","klar"],1:["🌤️","überwiegend klar"],2:["⛅","wolkig"],3:["☁️","bedeckt"],45:["🌫️","Nebel"],48:["🌫️","Reifnebel"],
+  51:["🌦️","leichter Niesel"],53:["🌦️","Niesel"],55:["🌦️","starker Niesel"],56:["🧊","gefrierender Niesel"],57:["🧊","gefrierender Niesel"],
+  61:["🌧️","leichter Regen"],63:["🌧️","Regen"],65:["🌧️","starker Regen"],66:["🧊","gefrierender Regen"],67:["🧊","gefrierender Regen"],
+  71:["🌨️","leichter Schnee"],73:["🌨️","Schnee"],75:["❄️","starker Schnee"],77:["🌨️","Schneegriesel"],
+  80:["🌦️","Schauer"],81:["🌧️","Schauer"],82:["⛈️","heftige Schauer"],85:["🌨️","Schneeschauer"],86:["🌨️","Schneeschauer"],95:["⛈️","Gewitter"],96:["⛈️","Gewitter"],99:["⛈️","Gewitter"]};
+  return m[c]||["•","—"];
+}
+function show(id,on){$(id).hidden=!on}
+function setStatus(t){var e=$("status");e.textContent=t||"";e.hidden=!t}
+function setError(t){var e=$("error");e.textContent=t||"";e.hidden=!t}
+function fetchJson(url,ms){
+  var c=new AbortController(),to=setTimeout(function(){c.abort()},ms||25000);
+  return fetch(url,{signal:c.signal}).then(function(r){clearTimeout(to);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()});
+}
+
+/* ---------- Orte und Route ---------- */
+function geocode(q){
+  var u="https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=de&accept-language=de&q="+encodeURIComponent(q);
+  return fetchJson(u).then(function(a){
+    if(!a.length)throw new Error("Ort nicht gefunden: "+q);
+    return {lat:+a[0].lat,lon:+a[0].lon,name:a[0].display_name.split(",")[0]};
+  });
+}
+function route(a,b){
+  var u="https://router.project-osrm.org/route/v1/driving/"+a.lon+","+a.lat+";"+b.lon+","+b.lat+"?overview=full&geometries=geojson&steps=false";
+  return fetchJson(u,40000).then(function(d){
+    if(d.code!=="Ok"||!d.routes.length)throw new Error("Keine Route gefunden.");
+    return d.routes[0];
+  });
+}
+function split(coords,segM){
+  var segs=[],cur=[coords[0]],acc=0;
+  for(var i=1;i<coords.length;i++){var d=hav(coords[i-1],coords[i]);acc+=d;cur.push(coords[i]);if(acc>=segM){segs.push({pts:cur,m:acc});cur=[coords[i]];acc=0}}
+  if(cur.length>1){if(segs.length&&acc<segM/2){var l=segs[segs.length-1];l.pts=l.pts.concat(cur.slice(1));l.m+=acc}else segs.push({pts:cur,m:acc})}
+  return segs;
+}
+
+/* ---------- Wetter ---------- */
+function fetchWeather(cells){
+  var out=[],chunks=[];
+  for(var i=0;i<cells.length;i+=40)chunks.push(cells.slice(i,i+40));
+  return Promise.all(chunks.map(function(ch){
+    var u="https://api.open-meteo.com/v1/forecast?latitude="+ch.map(function(c){return c.lat.toFixed(3)}).join(",")+
+      "&longitude="+ch.map(function(c){return c.lon.toFixed(3)}).join(",")+"&hourly="+VARS.join(",")+
+      "&models=icon_d2,icon_eu&past_hours=6&forecast_hours=66&timezone=Europe%2FBerlin&wind_speed_unit=ms";
+    return fetchJson(u,40000).then(function(d){return Array.isArray(d)?d:[d]});
+  })).then(function(parts){return [].concat.apply([],parts)});
+}
+function g(h,k,i,def){
+  var a=h[k+"_icon_d2"],v=a?a[i]:null;
+  if(v==null){a=h[k+"_icon_eu"];v=a?a[i]:null}
+  if(v==null&&h[k])v=h[k][i];
+  return v==null?def:v;
+}
+function rate(h,i){
+  var t=g(h,"temperature_2m",i,5),td=g(h,"dew_point_2m",i,t-3),surf=g(h,"soil_temperature_0cm",i,t),
+      rh=g(h,"relative_humidity_2m",i,70),code=g(h,"weather_code",i,0),rain=g(h,"rain",i,0),snow=g(h,"snowfall",i,0),
+      cloud=g(h,"cloud_cover",i,100),wind=g(h,"wind_speed_10m",i,5),vis=g(h,"visibility",i,20000),day=g(h,"is_day",i,1);
+  var pr=0,s12=0,j;
+  for(j=Math.max(0,i-3);j<=i;j++)pr+=g(h,"precipitation",j,0);
+  for(j=Math.max(0,i-11);j<=i;j++)s12+=g(h,"snowfall",j,0);
+  var best=[0,"Unauffällig. Fahrbahn ca. "+surf.toFixed(1)+" °C, Luft "+t.toFixed(1)+" °C."];
+  function up(s,txt){if(s>best[0])best=[s,txt]}
+  if([56,57,66,67].indexOf(code)>=0||(rain>0&&surf<=0))up(2,"Gefrierender Regen möglich (Fahrbahn "+surf.toFixed(1)+" °C bei Regen): Glatteisgefahr.");
+  if(surf<=0&&(pr>=0.1||rh>=95))up((surf<=-1&&pr>=0.1)?2:1,"Fahrbahn "+surf.toFixed(1)+" °C und nass: überfrierende Nässe möglich.");
+  if(surf<=0&&surf<=td)up(1,"Fahrbahn "+surf.toFixed(1)+" °C unter Taupunkt "+td.toFixed(1)+" °C: Reifglätte möglich.");
+  if(snow>0&&surf<=1)up(1,"Schneefall bei Fahrbahn "+surf.toFixed(1)+" °C: Schneeglätte möglich.");
+  if(s12>=5)up(2,"Starker Schneefall ("+s12.toFixed(0)+" cm in 12 h): Schneeglätte.");
+  if(t>=0&&t<=4&&cloud<=25&&wind<=3&&!day&&rh>=85)up(1,"Klare, windschwache Nacht bei "+t.toFixed(1)+" °C: Boden kann überfrieren.");
+  if(vis<150)up(2,"Sicht unter 150 m: Nebel.");else if(vis<1000)up(1,"Sicht unter 1 km: Nebel.");
+  return best;
+}
+
+/* ---------- Hauptablauf ---------- */
+function run(){
+  var q1=$("from").value.trim(),q2=$("to").value.trim();
+  if(!q1||!q2){setError("Bitte Start und Ziel eingeben.");return}
+  setError("");show("result",false);$("goBtn").disabled=true;
+  var A,B,R;
+  setStatus("Orte werden gesucht …");
+  geocode(q1).then(function(a){A=a;return new Promise(function(r){setTimeout(r,1100)})})
+  .then(function(){return geocode(q2)}).then(function(b){B=b;setStatus("Route wird berechnet …");return route(A,B)})
+  .then(function(r){R=r;setStatus("Wetterdaten werden geladen …");
+    var coords=R.geometry.coordinates,km=R.distance/1000;
+    var segM=Math.max(2000,R.distance/90), segs=split(coords,segM);
+    var scale=Math.max(1,km/120), cl=0.018*scale, co=0.0295*scale, cells=[], idx={};
+    segs.forEach(function(s){
+      var m=s.pts[Math.floor(s.pts.length/2)],k=Math.round(m[1]/cl)+"_"+Math.round(m[0]/co);
+      if(!(k in idx)){idx[k]=cells.length;cells.push({lat:Math.round(m[1]/cl)*cl,lon:Math.round(m[0]/co)*co})}
+      s.cell=idx[k];
+    });
+    return fetchWeather(cells).then(function(w){return {A:A,B:B,R:R,segs:segs,cells:cells,w:w,km:km}});
+  }).then(function(d){
+    var times=d.w[0].hourly.time,now=berlinNowKey(),start=0;
+    for(var i=0;i<times.length;i++){if(times[i]>=now){start=i;break}}
+    var n=Math.min(48,times.length-start-8);if(n<12)n=Math.min(12,times.length-start);
+    var cum=0,tot=d.R.distance;
+    d.segs.forEach(function(s){s.midFrac=(cum+s.m/2)/tot;cum+=s.m});
+    d.start=start;d.n=n;d.times=times;d.durMin=d.R.duration/60;
+    // Bewertung je Abfahrtsstunde und Abschnitt (mit Fahrzeit-Versatz)
+    d.segs.forEach(function(s){
+      s.lv=[];s.why=[];var h=d.w[s.cell].hourly;
+      for(var k=0;k<n;k++){
+        var off=Math.round(s.midFrac*d.durMin/60),idx=Math.min(times.length-1,start+k+off),r=rate(h,idx);
+        s.lv.push(r[0]);s.why.push(r[1]);
+      }
+    });
+    S=d;hour=0;$("hr").max=n-1;$("hr").value=0;
+    ls("gk_from",q1);ls("gk_to",q2);
+    setStatus("");show("result",true);drawAll();
+  }).catch(function(e){
+    setStatus("");
+    setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
+  }).then(function(){$("goBtn").disabled=false});
+}
+
+function worst(i){var m=0;S.segs.forEach(function(s){if(s.lv[i]>m)m=s.lv[i]});return m}
+
+function drawAll(){
+  var i=hour,w=worst(i),bad=S.segs.filter(function(s){return s.lv[i]>0}).length;
+  $("banner").className="banner l"+w;$("dot").textContent=SYM[w];
+  $("bt").textContent=w===0?"Keine Glätte erwartet":(w===1?"Vorsicht auf Teilen der Strecke":"Glättegefahr auf der Strecke");
+  $("bs").textContent=(w===0?"Alle "+S.segs.length+" Abschnitte unauffällig":bad+" von "+S.segs.length+" Abschnitten betroffen")+
+    " · "+S.A.name+" → "+S.B.name+", "+S.km.toFixed(0)+" km, ca. "+fmtMin(S.durMin);
+  $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
+  var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
+  var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
+  drawWx();drawMap();drawList();
+}
+function fmtMin(m){m=Math.round(m);return m<60?m+" Min.":Math.floor(m/60)+" Std. "+String(m%60).padStart(2,"0")+" Min."}
+
+function wxBox(name,h,idx){
+  var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
+  return '<div class="c"><small>'+name+'</small><div class="t">'+ic[0]+" "+Math.round(t)+'°</div><small>'+ic[1]+' · Wind '+Math.round(wd*3.6)+' km/h'+(p>0?' · '+p.toFixed(1).replace(".",",")+' mm':'')+'</small></div>';
+}
+function drawWx(){
+  var i=S.start+hour,hs=S.w[S.segs[0].cell].hourly,he=S.w[S.segs[S.segs.length-1].cell].hourly;
+  var arr=Math.min(S.times.length-1,i+Math.round(S.durMin/60));
+  $("wx").innerHTML=wxBox("Start · "+S.A.name,hs,i)+wxBox("Ziel · "+S.B.name+" (Ankunft)",he,arr);
+  var h="";
+  for(var k=0;k<24&&i+k<S.times.length;k++){
+    var c=wmo(g(hs,"weather_code",i+k,0)),t=g(hs,"temperature_2m",i+k,0),p=g(hs,"precipitation",i+k,0);
+    h+='<div>'+String(new Date(S.times[i+k]).getHours()).padStart(2,"0")+' Uhr<br>'+c[0]+'<b>'+Math.round(t)+'°</b>'+(p>0?p.toFixed(1).replace(".",","):"&nbsp;")+'</div>';
+  }
+  $("hours").innerHTML=h;
+  $("hoursNote").textContent="Stundenwerte am Startort ab Abfahrt (Temperatur, Niederschlag in mm).";
+}
+
+function drawMap(){
+  var latlngs=[];
+  if(typeof L==="undefined"){$("map").textContent="Karte nicht verfügbar (offline).";return}
+  if(!map){
+    map=L.map("map",{zoomControl:true,attributionControl:true});
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap-Mitwirkende"}).addTo(map);
+    layer=L.layerGroup().addTo(map);
+  }
+  layer.clearLayers();
+  S.segs.forEach(function(s){
+    var ll=s.pts.map(function(p){return [p[1],p[0]]});latlngs=latlngs.concat(ll);
+    L.polyline(ll,{color:COL[s.lv[hour]],weight:6,opacity:.95,lineCap:"round"}).addTo(layer);
+  });
+  L.circleMarker([S.A.lat,S.A.lon],{radius:7,color:"#14212b",fillColor:"#fff",fillOpacity:1,weight:3}).bindTooltip(S.A.name).addTo(layer);
+  L.circleMarker([S.B.lat,S.B.lon],{radius:7,color:"#fff",fillColor:"#14212b",fillOpacity:1,weight:3}).bindTooltip(S.B.name).addTo(layer);
+  map.invalidateSize();map.fitBounds(L.latLngBounds(latlngs),{padding:[16,16]});
+}
+
+function drawList(){
+  var h="",i=hour;
+  // lange Strecken: nur auffällige Abschnitte einzeln, den Rest zusammenfassen
+  var onlyBad=S.segs.length>30;
+  S.segs.forEach(function(s,idx){
+    var l=s.lv[i];if(onlyBad&&l===0)return;
+    h+='<li><details><summary><span class="pill l'+l+'">'+NAME[l]+'</span><span class="nm">Abschnitt '+(idx+1)+'</span><span class="km">'+(s.m/1000).toFixed(1).replace(".",",")+' km</span></summary><p class="why">'+s.why[i]+'</p></details></li>';
+  });
+  if(!h)h='<li><p class="why" style="padding:6px 0">Alle '+S.segs.length+' Abschnitte unauffällig.</p></li>';
+  $("listH").textContent=onlyBad?"Auffällige Abschnitte":"Abschnitte";
+  $("list").innerHTML=h;
+}
+
+
+/* ---------- Wetter-Hintergrund (Canvas) ---------- */
+var BG=(function(){
+  var cv=$("bg"),cx=cv.getContext("2d"),W=0,H=0,dpr=1,scene="idle",night=false,parts=[],t0=0,raf=0,flash=0,nextFlash=0;
+  var reduce=window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var dark=function(){return window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches};
+  function size(){dpr=Math.min(2,window.devicePixelRatio||1);W=window.innerWidth;H=window.innerHeight;cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0)}
+  function R(a,b){return a+Math.random()*(b-a)}
+  function make(){
+    parts=[];var n,i;
+    if(scene==="rain"||scene==="thunder"||scene==="icerain"){n=Math.round(W/4);for(i=0;i<n;i++)parts.push({x:R(0,W),y:R(0,H),v:R(520,820),l:R(10,20)})}
+    else if(scene==="snow"){n=Math.round(W/5);for(i=0;i<n;i++)parts.push({x:R(0,W),y:R(0,H),v:R(30,80),r:R(1.4,3.6),p:R(0,6.28),s:R(.5,1.5)})}
+    else if(scene==="clear"&&night||scene==="partly"&&night){n=70;for(i=0;i<n;i++)parts.push({x:R(0,W),y:R(0,H*.6),r:R(.5,1.6),p:R(0,6.28),s:R(.6,2)})}
+    if(scene==="cloudy"||scene==="rain"||scene==="thunder"||scene==="icerain"||scene==="snow"||scene==="partly"||scene==="fog"||scene==="idle"){
+      var c=scene==="partly"?4:(scene==="idle"?4:7);for(i=0;i<c;i++)parts.push({cloud:1,x:R(-100,W),y:R(10,H*.45),w:R(130,260),v:R(5,16),a:R(.5,1)});
+    }
+    if(scene==="fog")for(i=0;i<5;i++)parts.push({fog:1,x:R(-200,W),y:R(H*.15,H*.9),w:R(300,600),v:R(4,10)});
+  }
+  function cloud(x,y,w,a,col){
+    cx.fillStyle=col.replace("A",(a*.55).toFixed(2));
+    var h=w*.32;
+    [[0,0,.5],[.28,-.18,.4],[.55,-.05,.46],[.8,.05,.34]].forEach(function(e){cx.beginPath();cx.ellipse(x+w*e[0],y+h*e[1],w*e[2]*.6,h*(e[2]+.25),0,0,6.283);cx.fill()});
+  }
+  function frame(ts){
+    if(!t0)t0=ts;var t=(ts-t0)/1000,dt=Math.min(.05,t-(frame.last||t));frame.last=t;
+    cx.clearRect(0,0,W,H);
+    var dk=dark(),cc=night||dk||scene==="rain"||scene==="thunder"?"rgba(190,205,220,A)":"rgba(255,255,255,A)";
+    if(scene==="rain"||scene==="thunder"||scene==="icerain")cc="rgba(120,135,150,A)";
+    var i,p;
+    // Sonne bzw. Mond
+    if((scene==="clear"||scene==="partly")){
+      var sx=W*.78,sy=H*.14+40;
+      if(!night){
+        var g=cx.createRadialGradient(sx,sy,10,sx,sy,170);g.addColorStop(0,"rgba(255,214,90,.75)");g.addColorStop(1,"rgba(255,214,90,0)");cx.fillStyle=g;cx.fillRect(sx-180,sy-180,360,360);
+        cx.save();cx.translate(sx,sy);cx.rotate(t*.05);cx.strokeStyle="rgba(255,205,80,.35)";cx.lineWidth=5;cx.lineCap="round";
+        for(i=0;i<12;i++){cx.rotate(6.283/12);cx.beginPath();cx.moveTo(52,0);cx.lineTo(52+16+8*Math.sin(t*1.2+i),0);cx.stroke()}
+        cx.restore();cx.fillStyle="rgba(255,225,110,.95)";cx.beginPath();cx.arc(sx,sy,38,0,6.283);cx.fill();
+      }else{
+        cx.fillStyle="rgba(240,240,225,.9)";cx.beginPath();cx.arc(sx,sy,28,0,6.283);cx.fill();
+        cx.fillStyle="rgba(15,26,33,.9)";cx.beginPath();cx.arc(sx+12,sy-6,26,0,6.283);cx.fill();
+      }
+    }
+    for(i=0;i<parts.length;i++){
+      p=parts[i];
+      if(p.cloud){p.x+=p.v*dt;if(p.x>W+60)p.x=-p.w;cloud(p.x,p.y,p.w,p.a,cc)}
+      else if(p.fog){p.x+=p.v*dt;if(p.x>W+50)p.x=-p.w;var gg=cx.createLinearGradient(p.x,0,p.x+p.w,0);gg.addColorStop(0,"rgba(200,210,220,0)");gg.addColorStop(.5,"rgba(200,210,220,"+(dk?.16:.32)+")");gg.addColorStop(1,"rgba(200,210,220,0)");cx.fillStyle=gg;cx.fillRect(p.x,p.y,p.w,46)}
+      else if(p.l){ // Regen
+        p.y+=p.v*dt;p.x-=p.v*dt*.18;if(p.y>H){p.y=-20;p.x=R(0,W+60)}
+        cx.strokeStyle=scene==="icerain"?"rgba(170,225,255,.6)":"rgba(150,185,225,.5)";cx.lineWidth=1.3;cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(p.x+p.l*.18,p.y-p.l);cx.stroke();
+      }else if(p.s&&p.v){ // Schnee
+        p.y+=p.v*dt;p.p+=dt*p.s;p.x+=Math.sin(p.p)*14*dt;if(p.y>H+5){p.y=-5;p.x=R(0,W)}
+        cx.fillStyle=dk?"rgba(255,255,255,.85)":"rgba(255,255,255,.95)";cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fill();
+        if(!dk){cx.strokeStyle="rgba(150,175,200,.35)";cx.lineWidth=.6;cx.stroke()}
+      }else if(p.s){ // Sterne
+        p.p+=dt*p.s;cx.fillStyle="rgba(255,255,240,"+(.35+.5*Math.abs(Math.sin(p.p))).toFixed(2)+")";cx.beginPath();cx.arc(p.x,p.y,p.r,0,6.283);cx.fill();
+      }
+    }
+    if(scene==="thunder"){
+      if(t>nextFlash){flash=1;nextFlash=t+R(4,9)}
+      if(flash>0){cx.fillStyle="rgba(255,255,255,"+(flash*.35).toFixed(2)+")";cx.fillRect(0,0,W,H);flash-=dt*3.5}
+    }
+    if(!reduce)raf=requestAnimationFrame(frame);
+  }
+  function start(){cancelAnimationFrame(raf);t0=0;frame.last=0;if(reduce){frame(0)}else raf=requestAnimationFrame(frame)}
+  var SKY={idle:["#cfe6f2","#1b3a4d"],clear:["#bfe3f7","#173d5c"],partly:["#c6e0ef","#1c3d54"],cloudy:["#cdd6dd","#26343f"],rain:["#aab7c4","#1f2d3a"],
+    thunder:["#8d98a8","#161f2b"],icerain:["#b4cbdb","#1d3342"],snow:["#dfe8f0","#2a3b4a"],fog:["#d6dbde","#2b373f"],night:["#1a2a45","#0c1626"]};
+  function set(sc,isNight){
+    if(sc===scene&&isNight===night)return;
+    scene=sc;night=isNight;
+    var key=(isNight&&(sc==="clear"||sc==="partly"))?"night":sc,c=SKY[key]||SKY.idle;
+    document.documentElement.style.setProperty("--sky",dark()?c[1]:c[0]);
+    make();start();
+  }
+  window.addEventListener("resize",function(){size();make()});
+  document.addEventListener("visibilitychange",function(){if(document.hidden)cancelAnimationFrame(raf);else start()});
+  size();
+  return {set:set};
+})();
+function sceneFor(h,idx){
+  var c=g(h,"weather_code",idx,0),cl=g(h,"cloud_cover",idx,50),n=g(h,"is_day",idx,1)===0,sc;
+  if(c>=95)sc="thunder";
+  else if(c===56||c===57||c===66||c===67)sc="icerain";
+  else if((c>=51&&c<=65)||(c>=80&&c<=82))sc="rain";
+  else if((c>=71&&c<=77)||c===85||c===86)sc="snow";
+  else if(c===45||c===48)sc="fog";
+  else if(c===3||cl>=75)sc="cloudy";
+  else if(c===1||c===2||cl>=30)sc="partly";
+  else sc="clear";
+  var m=/szene=([a-z]+)(-nacht)?/.exec(location.hash);   // Testhilfe: #szene=snow oder #szene=clear-nacht
+  if(m)return [m[1],!!m[2]];
+  return [sc,n];
+}
+BG.set("idle",false);
+
+/* ---------- Bedienung ---------- */
+$("form").addEventListener("submit",function(e){e.preventDefault();run()});
+$("hr").addEventListener("input",function(e){hour=+e.target.value;if(S)drawAll()});
+$("swap").addEventListener("click",function(){var a=$("from").value;$("from").value=$("to").value;$("to").value=a});
+Array.prototype.forEach.call(document.querySelectorAll(".chips button"),function(b){
+  b.addEventListener("click",function(){$("from").value=b.dataset.a;$("to").value=b.dataset.b;run()});
+});
+$("ack").addEventListener("click",function(){ls("gk_ack","1");show("disc",false)});
+if(ls("gk_ack")!=="1")show("disc",true);
+var f=ls("gk_from"),t=ls("gk_to");if(f)$("from").value=f;if(t)$("to").value=t;
+
+var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/.test(ua),and=/Android/.test(ua);
+$("plat").textContent=ios?"iPhone: In Safari auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen. Nur so sind später Push-Nachrichten möglich (ab iOS 16.4)."
+  :and?"Android: Im Browser-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“ wählen. Push-Nachrichten kommen in einer späteren Version."
+  :"Am Handy öffnen: iPhone über „Zum Home-Bildschirm“ in Safari, Android über „App installieren“ im Browser.";
+
+if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
+$("ver").textContent="Version "+VERSION;$("verFoot").textContent="Version "+VERSION+" vom "+VDATE+".";
+run();
+})();
+</script>
+</body>
+</html>
