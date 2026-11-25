@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.2 – 25.11.2026
+- Kacheln transparenter, Hintergrund besser sichtbar.
+- Startort heißt „Sonnenberg, Gransee“; keine Schnellwahl-Buttons mehr.
+
 ## Version 1.1 – 25.11.2026
 - Neue Reihenfolge: Straßenstatus oben, dann Wetter auf einen Blick, Karte, Abschnitte; Ortswahl weiter unten.
 - Ortssuche zeigt bis zu 8 Treffer mit Landkreis, Koordinaten und Kartenlink zur Auswahl.
