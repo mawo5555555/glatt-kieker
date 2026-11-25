@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.20 – 25.11.2026
+- Das Tesla fährt die Strecke auf der Mini-Karte ab (Schleife, in Fahrtrichtung). Bei „Bewegung reduzieren“ steht es still.
+
 ## Version 1.19 – 25.11.2026
 - Kartenstil: Esri World Street Map statt CARTO (CARTO verlangt inzwischen einen API-Schlüssel).
 
