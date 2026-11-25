@@ -137,15 +137,16 @@ body{padding:0;overflow:hidden}
 #sheet.full #sheetBody{overflow-y:auto}
 .card{background:var(--card)}
 .greet{margin-top:0}
-#topbar{position:fixed;top:max(8px,env(safe-area-inset-top,0px));left:8px;right:8px;z-index:4;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
-#topbar h1{font-size:1.05rem}
+#topbar{position:fixed;top:calc(max(8px,env(safe-area-inset-top,0px)) + 18px);left:8px;right:8px;z-index:4;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+#topbar h1{font-size:1.25rem;font-weight:800;color:var(--fg)}
 #topbar header{margin:0}
 #mapchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 0 2px}
-#mapinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 0 0}
-.mt{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:4px 6px;min-width:0}
-.mt small{display:block;font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mt b{display:block;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mt.l0{border-color:var(--ok)}.mt.l1{border-color:var(--warn)}.mt.l2{border-color:var(--bad)}
+#mapinfo{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px;padding:8px 0 0}
+.mt{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 8px 6px;min-width:0}
+.mt i{font-style:normal;margin-right:3px}
+.mt small{display:block;font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt b{display:block;font-size:1.12rem;font-weight:800;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt.l0{border-color:var(--ok)}.mt.l1{border-color:var(--warn);background:var(--warn-bg)}.mt.l2{border-color:var(--bad);background:var(--bad-bg)}
 #mapchips::-webkit-scrollbar{display:none}
 #mapchips button{min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:.74rem;white-space:nowrap;overflow:hidden}
 #mapchips button.l0{border-color:var(--ok)}#mapchips button.l1{border-color:var(--warn)}#mapchips button.l2{border-color:var(--bad)}
@@ -154,7 +155,7 @@ body{padding:0;overflow:hidden}
 .riskpin div{transform:translate(-50%,-50%);display:inline-block;color:#fff;font:600 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #fff}
 #sheet:not(.full) .greet{display:none}
 #sheet:not(.full) .opt{display:none}
-#mapctl{bottom:calc(var(--vis,230px) + 12px)}
+#mapctl{bottom:calc(var(--vis,0px) + 104px + env(safe-area-inset-bottom,0px))}
 .rep{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 .rep>div{background:var(--card);border-radius:16px;padding:16px;max-width:360px;width:100%}
 .rep button{width:100%;margin-top:8px}
@@ -162,14 +163,29 @@ body{padding:0;overflow:hidden}
 #repnote{margin-top:6px;font-size:.85rem;color:var(--muted)}
 .repm{background:none;border:0}
 .repm div{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+#mapstatus{position:fixed;left:8px;right:8px;bottom:calc(max(10px,env(safe-area-inset-bottom,0px)) + 4px);z-index:4;display:flex;gap:8px;max-width:640px;margin:0 auto}
+body.sheetopen #mapstatus{display:none}
+#stBtn{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;border-radius:16px;border:3px solid var(--line);padding:10px 12px;background:var(--card);box-shadow:0 2px 12px rgba(0,0,0,.3);min-height:76px}
+#stBtn.l0{border-color:var(--ok);background:var(--ok-bg)}#stBtn.l1{border-color:var(--warn);background:var(--warn-bg)}#stBtn.l2{border-color:var(--bad);background:var(--bad-bg)}
+#stBtn .dot{width:42px;height:42px}
+#stBtn>span:last-child{min-width:0}
+#stT{display:block;font-size:1.08rem;font-weight:800;color:var(--fg)}
+#stS{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.84rem;line-height:1.3;color:var(--muted)}
+#optBtn{flex:none;width:86px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:.82rem;font-weight:700;box-shadow:0 2px 12px rgba(0,0,0,.3)}
+#optBtn i{font-style:normal;font-size:1.5rem;line-height:1}
+#sheet.closed{box-shadow:none}
+#shClose{position:absolute;top:6px;right:10px;min-height:36px;width:36px;padding:0;border-radius:50%;font-size:1rem;z-index:2}
+.tesm{background:none;border:0}
+.tesm div{transform:translate(-50%,-50%);display:inline-block;background:#1e6fd9;color:#fff;font:700 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 </style>
 </head>
 <body>
 <canvas id="bg" aria-hidden="true" hidden></canvas>
 <div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
-<div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div><div id="mapinfo" aria-label="Wetter und Glätte"></div></div>
+<div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div><div id="mapinfo" aria-label="Wetter"></div></div>
+<div id="mapstatus"><button type="button" id="stBtn" class="l0" aria-label="Glätte-Status"><span class="dot" id="stDot">…</span><span><b id="stT">Lade Strecke …</b><span id="stS"></span></span></button><button type="button" id="optBtn"><i>⚙️</i>Optionen</button></div>
 <div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
-<div id="sheet"><div id="grip" role="button" aria-label="Infos größer oder kleiner" tabindex="0"><i></i></div><div id="sheetBody">
+<div id="sheet" class="closed"><div id="grip" role="button" aria-label="Fenster größer oder schließen" tabindex="0"><i></i></div><button type="button" id="shClose" aria-label="Schließen">✕</button><div id="sheetBody">
 <main>
 
   <div class="card disc" id="disc" hidden>
@@ -237,24 +253,27 @@ body{padding:0;overflow:hidden}
 (function(){
 var sh=document.getElementById("sheet"),gr=document.getElementById("grip"),root=document.documentElement;
 function H(){return window.innerHeight*0.92}
-function snaps(){return [230,Math.round(window.innerHeight*0.55),Math.round(H())]}
+function snaps(){return [0,Math.round(window.innerHeight*0.55),Math.round(H())]}
 var idx=0;
-function set(i,px){idx=i;var v=px!=null?px:snaps()[i];root.style.setProperty("--vis",v+"px");sh.classList.toggle("full",i===2&&px==null);sh.classList.toggle("mid",i===1&&px==null);window.gkVis=v}
-window.gkSheet=set;set(0);
+function set(i,px){idx=i;var v=px!=null?px:snaps()[i];root.style.setProperty("--vis",v+"px");sh.classList.toggle("full",i===2&&px==null);sh.classList.toggle("mid",i===1&&px==null);sh.classList.toggle("closed",v<=0);document.body.classList.toggle("sheetopen",v>0);window.gkVis=v;if(window.gkMap&&px==null)setTimeout(function(){window.gkMap.invalidateSize()},320)}
+window.gkSheet=set;sh.classList.add("drag");set(0);setTimeout(function(){sh.classList.remove("drag")},60);
 var y0,v0,drag=false,moved=false;
 gr.addEventListener("pointerdown",function(e){drag=true;moved=false;y0=e.clientY;v0=window.gkVis;sh.classList.add("drag");gr.setPointerCapture(e.pointerId)});
-gr.addEventListener("pointermove",function(e){if(!drag)return;var d=y0-e.clientY;if(Math.abs(d)>4)moved=true;var v=Math.max(120,Math.min(H(),v0+d));root.style.setProperty("--vis",v+"px");window.gkVis=v});
+gr.addEventListener("pointermove",function(e){if(!drag)return;var d=y0-e.clientY;if(Math.abs(d)>4)moved=true;var v=Math.max(0,Math.min(H(),v0+d));root.style.setProperty("--vis",v+"px");window.gkVis=v});
 function end(){if(!drag)return;drag=false;sh.classList.remove("drag");var s=snaps();
- if(!moved){set((idx+1)%3);}else{var b=0;s.forEach(function(x,i){if(Math.abs(x-window.gkVis)<Math.abs(s[b]-window.gkVis))b=i});set(b)}
+ if(!moved){set(idx===0?1:0);}else{var b=0;s.forEach(function(x,i){if(Math.abs(x-window.gkVis)<Math.abs(s[b]-window.gkVis))b=i});set(b)}
  if(window.gkMap)setTimeout(function(){window.gkMap.invalidateSize()},320)}
 gr.addEventListener("pointerup",end);gr.addEventListener("pointercancel",end);
-gr.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){set((idx+1)%3);e.preventDefault()}});
+gr.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){set(idx===0?1:0);e.preventDefault()}});
+document.getElementById("stBtn").addEventListener("click",function(){set(1)});
+document.getElementById("optBtn").addEventListener("click",function(){set(2)});
+document.getElementById("shClose").addEventListener("click",function(){set(0)});
 })();
 </script>
 <script>
 (function(){
 "use strict";
-var VERSION="1.24",VDATE="25.11.2026";
+var VERSION="1.25",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -641,18 +660,24 @@ function drawAll(){
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
   drawInfo(w,i);drawWx();drawMap();drawMini();
 }
+var lastInfo=null;
 function drawInfo(w,i){
+  if(w==null){if(!lastInfo||!S)return;w=lastInfo[0];i=lastInfo[1]}lastInfo=[w,i];
   var hs=S.w[S.segs[0].cell].hourly,he=S.w[S.segs[S.segs.length-1].cell].hourly;
   var a=S.start+i,arr=Math.min(S.times.length-1,a+Math.round(S.durMin/60));
   var ts=g(hs,"temperature_2m",a,0),te=g(he,"temperature_2m",arr,0),fmin=99;
   for(var k=0;k<=6;k++){var tt=g(hs,"temperature_2m",a+k,99);if(tt<fmin)fmin=tt}
-  var pr=g(hs,"precipitation",a,0)+g(he,"precipitation",arr,0);
-  var tile=function(c,l,v){return '<div class="mt '+c+'"><small>'+l+'</small><b>'+v+'</b></div>'};
-  $("mapinfo").innerHTML=tile("l"+w,"Glätte",["keine erwartet","Vorsicht","Gefahr"][w])+
-    tile("","Temp. Start / Ziel",Math.round(ts)+"° / "+Math.round(te)+"°")+
-    tile(pr>0.05?"l1":"","Niederschlag",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"trocken")+
-    tile(fmin<=0?"l2":(fmin<=2?"l1":"l0"),"Frost (6 Std.)",fmin<=0?"Frostgefahr":(fmin<=2?"nahe 0 °":"kein Frost"));
+  var pr=g(hs,"precipitation",a,0)+g(he,"precipitation",arr,0),sn=g(hs,"snowfall",a,0)+g(he,"snowfall",arr,0);
+  var tile=function(c,ic,l,v){return '<div class="mt '+c+'"><small><i>'+ic+'</i>'+l+'</small><b>'+v+'</b></div>'};
+  var h=tile("","🌡️","Start→Ziel",Math.round(ts)+"° → "+Math.round(te)+"°")+
+    tile(pr>0.05?"l1":"",sn>0?"🌨️":(pr>0.05?"🌧️":"☀️"),sn>0?"Schnee":"Regen",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"trocken")+
+    tile(fmin<=0?"l2":(fmin<=2?"l1":""),"❄️","Frost 6 Std.",fmin<=0?"ja":(fmin<=2?"knapp":"nein"));
+  var n=3;
+  $("mapinfo").style.setProperty("--n",n);$("mapinfo").innerHTML=h;
+  $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];$("stT").textContent=$("bt").textContent;
+  $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt");
 }
+window.gkRedrawInfo=function(){drawInfo()};
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
   return '<div class="c"><small>'+name+'</small><div class="t">'+ic[0]+" "+Math.round(t)+'°</div><small>'+ic[1]+' · Wind '+Math.round(wd*3.6)+' km/h'+(p>0?' · '+p.toFixed(1).replace(".",",")+' mm':'')+'</small></div>';
@@ -671,7 +696,7 @@ function drawWx(){
   $("hoursNote").textContent="Stundenwerte am Startort ab Abfahrt (Temperatur, Niederschlag in mm).";
 }
 (function(){
-var repUrl=function(){return (ls("gk_report")||"").replace(/\/+$/,"")};
+var repUrl=function(){return (ls("gk_report")||"https://glaettekieker-api.mawo555.workers.dev").replace(/\/+$/,"")};
 $("repUrl").value=repUrl();
 $("repSave").addEventListener("click",function(){ls("gk_report",$("repUrl").value.trim());alert("Gespeichert.")});
 function dlg(){
@@ -707,6 +732,26 @@ function loadReports(){
   }).catch(function(){});
 }
 window.loadReportsDeferred=loadReports;
+(function(){var m=location.hash.match(/rk=([0-9a-f]{16,64})/);if(m){ls("gk_rk",m[1]);history.replaceState(null,"",location.pathname+location.search)}})();
+function loadTesla(){
+  var rk=ls("gk_rk");if(!rk||!window.gkMap)return;
+  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){return r.json()}).then(function(j){
+    var p=j.probes||[],T=p[0]||null,lay=window.gkTeslaLayer;window.gkTesla=T;
+    if(window.gkRedrawInfo)window.gkRedrawInfo();
+    if(!lay||!T)return;lay.clearLayers();
+    var recent=p.filter(function(x){return T.ts-x.ts<2*3600e3});
+    if(recent.length>1)L.polyline(recent.map(function(x){return [x.lat,x.lon]}),{color:"#1e6fd9",weight:4,opacity:.7,dashArray:"6 6"}).addTo(lay);
+    var live=Date.now()-T.ts<10*60e3,tm=new Date(T.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}),tp=T.temp_out==null?"":" · "+String(Math.round(T.temp_out*10)/10).replace(".",",")+" °C";
+    if(live){
+      var q=recent[1],deg=q?bearing([q.lon,q.lat],[T.lon,T.lat])-90:-90;
+      if(window.gkCarM&&window.gkCarM._map){window.gkCarM.remove();if(typeof carRaf!=="undefined"&&carRaf)cancelAnimationFrame(carRaf)}
+      L.marker([T.lat,T.lon],{icon:carIcon(deg),zIndexOffset:1100}).bindTooltip("Tesla jetzt"+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
+    }else{
+      L.marker([T.lat,T.lon],{icon:L.divIcon({className:"tesm",html:"<div>🚗 Tesla "+tm+tp+"</div>",iconSize:[0,0]}),zIndexOffset:1050}).addTo(lay);
+    }
+  }).catch(function(){});
+}
+window.loadTeslaDeferred=loadTesla;setInterval(loadTesla,60000);
 })();
 function drawMap(){
   if(!$("map"))return;
@@ -872,7 +917,7 @@ function startCar(path,m){
   carRaf=requestAnimationFrame(step);
 }
 var lastAll=null;
-function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,190],paddingBottomRight:[30,(window.gkVis||230)+30]})}
+function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();var tb=document.getElementById("topbar"),ms=document.getElementById("mapstatus"),top=(tb?tb.getBoundingClientRect().bottom:120)+14,bot=(window.gkVis>0?window.gkVis:(ms?window.innerHeight-ms.getBoundingClientRect().top:100))+14;mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[24,top],paddingBottomRight:[66,bot],maxZoom:15})}
 $("locBtn").addEventListener("click",function(){fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
@@ -907,7 +952,9 @@ function drawMini(){
   startCar(S.flip?all.slice().reverse():all,carM);
   if(!window.gkRepLayer||window.gkRepLayer._map!==mini){window.gkRepLayer=L.layerGroup().addTo(mini)}
   mini.invalidateSize();fitRoute();
+  window.gkCarM=carM;window.gkTeslaLayer=L.layerGroup().addTo(mini);
   if(window.loadReportsDeferred)window.loadReportsDeferred();
+  if(window.loadTeslaDeferred)window.loadTeslaDeferred();
 }
 $("satBtn").addEventListener("click",function(){ls("gk_sat",ls("gk_sat")==="1"?"0":"1");drawMini()});
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});

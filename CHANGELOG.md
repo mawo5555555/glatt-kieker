@@ -1,5 +1,14 @@
 # Änderungen
 
+## Version 1.25 – 25.11.2026
+- Glätte-Status als große Kachel unten auf der Karte, daneben Kachel „Optionen“.
+- Unteres Fenster ist beim Öffnen ganz weg und kommt nur über die Kacheln (✕ schließt).
+- Wetter-Kacheln größer mit Symbolen: Temperatur Start → Ziel, Regen/Schnee, Frost.
+- Kopfleiste etwas tiefer, Titel besser lesbar.
+- Strecke beim Öffnen größer und mittig zwischen Kopfleiste und Statuskachel.
+- Echter Tesla auf der Karte (live beim Fahren, sonst letzter Standort) mit Außentemperatur.
+- Meldeserver ist voreingestellt.
+
 ## Version 1.24 – 25.11.2026
 - Vier Fahrt-Kacheln oben sichtbar, ohne Wischen.
 - Neue Kachelzeile auf der Karte: Glätte, Temperatur Start/Ziel, Niederschlag, Frost (nächste 6 Std.).
