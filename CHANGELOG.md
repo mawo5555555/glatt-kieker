@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.7 – 25.11.2026
+- Niederschlags-Vorschau für die nächsten 2 Stunden (15-Minuten-Modelldaten, Start/Mitte/Ziel).
+- Wetterfront: Blick 50/100/150 km gegen die Höhenströmung (850 hPa), Hinweis auf heranziehenden Niederschlag oder Kaltluft.
+
 ## Version 1.6 – 25.11.2026
 - DWD-Amtswarnungen (Glätte, Schnee, Frost, Nebel) entlang der Strecke, Quelle Bright Sky.
 
