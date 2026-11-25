@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.13 – 25.11.2026
+- Mini-Karte mit echten Kartenkacheln, Strecke farbig nach Abschnittsstatus.
+- DWD-Warnungen erscheinen als ⚠️ auf der Mini-Karte (am jeweiligen Prüfpunkt, nicht genau am Ort der Warnung).
+
 ## Version 1.12 – 25.11.2026
 - Strecken-Kacheln oben entfernt; stattdessen kleine Streckenkarte mit animierter Fahrtrichtung und Auto.
 - „Richtung wechseln“ tauscht Start und Ziel für die Ansicht.

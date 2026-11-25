@@ -111,6 +111,9 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 .rt-line{stroke-dasharray:10 10;animation:flow 1.2s linear infinite}
 .rt-line.rev{animation-direction:reverse}
 @keyframes flow{to{stroke-dashoffset:-20}}
+.alertico{font-size:20px;line-height:26px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.sat{filter:saturate(.85) contrast(1.05) brightness(.97)}
+#mini{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 6px 18px rgba(0,0,0,.25)}
 .carico{font-size:22px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
 .card{animation:rise .5s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -195,7 +198,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.12",VDATE="25.11.2026";
+var VERSION="1.13",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -454,9 +457,10 @@ function loadAlerts(d){
   Promise.all(pts.map(function(p){return fetchJson("https://api.brightsky.dev/alerts?lat="+p.lat.toFixed(3)+"&lon="+p.lon.toFixed(3),15000).catch(function(){return null})})).then(function(rs){
     if(id!==alertId)return;
     var seen={},out=[],now=Date.now();
-    rs.forEach(function(r){if(!r)return;r.alerts.forEach(function(a){
+    rs.forEach(function(r,pi){if(!r)return;r.alerts.forEach(function(a){
       if(!/GLATT|GLÄTT|SCHNEE|FROST|NEBEL|WINTER/i.test(a.event_de)||new Date(a.expires)<now||seen[a.alert_id])return;
-      seen[a.alert_id]=1;out.push({e:a.event_de,s:a.severity,w:r.location.name_short||"",ex:a.expires,h:a.headline_de,x:a.description_de})})});
+      seen[a.alert_id]=1;(d.alerts=d.alerts||[]).push({lat:pts[pi].lat,lon:pts[pi].lon,e:a.event_de});out.push({e:a.event_de,s:a.severity,w:r.location.name_short||"",ex:a.expires,h:a.headline_de,x:a.description_de})})});
+    drawMini();
     if(!out.length){if(rs.some(Boolean))box.appendChild(el("p",{class:"note",text:"DWD: keine amtliche Warnung vor Glätte, Schnee, Frost oder Nebel an der Strecke."}));return}
     out.forEach(function(a){
       var dt=el("details",{class:"al"}),sm=el("summary",{text:"DWD-Warnung: "+a.e+" (bis "+dayTime(a.ex)+")"});
@@ -688,17 +692,26 @@ BG.set("idle",false);
 
 
 /* ---------- Mini-Karte und Richtung ---------- */
-var mini=null;
+var mini=null,miniTiles=null;
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
   show("minibox",true);
   if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false})}
   var old=[];mini.eachLayer(function(x){old.push(x)});old.forEach(function(x){mini.removeLayer(x)});
-  var ll=[];S.segs.forEach(function(s){s.pts.forEach(function(p){ll.push([p[1],p[0]])})});
-  var line=L.polyline(ll,{color:"#1f6fa8",weight:6,lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
+  miniTiles=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,className:"sat"}).addTo(mini);
+  var all=[];
+  S.segs.forEach(function(s){
+    var ll=s.pts.map(function(p){return [p[1],p[0]]}),lv=s.lv[hour]||0;all=all.concat(ll);
+    L.polyline(ll,{color:"#ffffff",weight:11,opacity:.9,lineCap:"round",lineJoin:"round"}).addTo(mini);
+    L.polyline(ll,{color:COL[lv],weight:7,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
+  });
+  L.polyline(all,{color:"#ffffff",weight:2,opacity:.85,dashArray:"4 10",lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
+  (S.alerts||[]).forEach(function(a){
+    L.marker([a.lat,a.lon],{icon:L.divIcon({className:"alertico",html:"⚠️",iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip(a.e).addTo(mini);
+  });
   var o=S.flip?S.B:S.A;
   L.marker([o.lat,o.lon],{icon:L.divIcon({className:"carico",html:"🚗",iconSize:[28,28],iconAnchor:[14,14]})}).addTo(mini);
-  mini.invalidateSize();mini.fitBounds(line.getBounds(),{padding:[16,16]});
+  mini.invalidateSize();mini.fitBounds(L.polyline(all).getBounds(),{padding:[18,18]});
 }
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});
 
