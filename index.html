@@ -176,6 +176,27 @@ body.sheetopen #mapstatus{display:none}
 #sheet.closed{box-shadow:none}
 #shClose{position:absolute;top:6px;right:10px;min-height:36px;width:36px;padding:0;border-radius:50%;font-size:1rem;z-index:2}
 .tesm{background:none;border:0}
+@media (min-width:900px) and (min-height:560px){
+#topbar{right:auto;width:480px;left:16px;top:calc(max(12px,env(safe-area-inset-top,0px)) + 8px);padding:12px 16px;border-radius:20px}
+#topbar h1{font-size:1.7rem}
+#mapchips{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px}
+#mapchips button{min-height:52px;font-size:1.05rem}
+#mapinfo{gap:8px;padding-top:10px}
+.mt{padding:8px 12px 10px}
+.mt small{font-size:.95rem}
+.mt b{font-size:1.6rem}
+#mapstatus{left:16px;right:auto;width:640px;max-width:none;margin:0;bottom:20px;gap:12px}
+#stBtn{min-height:104px;padding:14px 18px;gap:16px}
+#stBtn .dot{width:56px;height:56px}
+#stT{font-size:1.5rem}
+#stS{font-size:1.1rem}
+#optBtn{width:120px;font-size:1.05rem}
+#optBtn i{font-size:2rem}
+#mapctl{right:20px;bottom:24px;gap:12px}
+#mapctl button{width:60px;min-height:60px;font-size:26px}
+#sheet{max-width:640px;left:16px!important;right:auto!important}
+.riskpin div,.tesm div{font-size:15px;padding:6px 12px}
+}
 .tesm div{transform:translate(-50%,-50%);display:inline-block;background:#1e6fd9;color:#fff;font:700 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 </style>
 </head>
@@ -273,7 +294,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.25",VDATE="25.11.2026";
+var VERSION="1.26",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -917,7 +938,7 @@ function startCar(path,m){
   carRaf=requestAnimationFrame(step);
 }
 var lastAll=null;
-function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();var tb=document.getElementById("topbar"),ms=document.getElementById("mapstatus"),top=(tb?tb.getBoundingClientRect().bottom:120)+14,bot=(window.gkVis>0?window.gkVis:(ms?window.innerHeight-ms.getBoundingClientRect().top:100))+14;mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[24,top],paddingBottomRight:[66,bot],maxZoom:15})}
+function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();var tb=document.getElementById("topbar"),ms=document.getElementById("mapstatus"),top=(tb?tb.getBoundingClientRect().bottom:120)+14,bot=(window.gkVis>0?window.gkVis:(ms?window.innerHeight-ms.getBoundingClientRect().top:100))+14;var wide=window.innerWidth>=900&&window.innerHeight>=560;mini.fitBounds(L.polyline(lastAll).getBounds(),wide?{paddingTopLeft:[690,40],paddingBottomRight:[110,40],maxZoom:15}:{paddingTopLeft:[24,top],paddingBottomRight:[66,bot],maxZoom:15})}
 $("locBtn").addEventListener("click",function(){fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;

@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.26 – 25.11.2026
+- Neue Ansicht für große Bildschirme (z. B. Tesla-Display): größere Schrift und Kacheln links, Strecke rechts daneben, größere Karten-Knöpfe. Handy unverändert.
+
 ## Version 1.25 – 25.11.2026
 - Glätte-Status als große Kachel unten auf der Karte, daneben Kachel „Optionen“.
 - Unteres Fenster ist beim Öffnen ganz weg und kommt nur über die Kacheln (✕ schließt).
