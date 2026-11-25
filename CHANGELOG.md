@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.45 – 25.11.2026
+- Schlitten: Glitzerspur bei Fahrt, laufende Rentiere, Laterne bei Dunkelheit, Rudolfs Nase leuchtet/blinkt bei Glättewarnung, geparkt mit Schneedecke, weihnachtliche Texte (Dez./Anfang Jan.), optional leichter Schneefall auf der Karte (Optionen).
+- Weihnachtsschlitten statt Auto-Symbol: Weihnachtsmann mit Geschenken, zwei Rentiere (eins mit roter Nase).
+- Kontrolle mit Nutzermeldungen: Der Server prüft täglich die DWD-WarnWetter-Glättemeldungen im Umkreis der Strecke gegen die eigene Vorhersage (Trefferquote in den Optionen).
+
 ## Version 1.44 – 25.11.2026
 - Kontrollschleife: Der Server vergleicht stündlich die Vorhersage mit Messwerten (DWD, Flughafen BER) und stellt nach 7 Tagen die Modellgewichte automatisch nach. Ergebnis in den Optionen.
 
