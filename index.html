@@ -267,6 +267,7 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
 </div></div>
@@ -296,7 +297,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.30",VDATE="25.11.2026";
+var VERSION="1.31",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -324,10 +325,18 @@ function wmo(c){
 }
 function show(id,on){$(id).hidden=!on}
 function setStatus(t){var e=$("status");e.textContent=t||"";e.hidden=!t}
-function setError(t){var e=$("error");e.textContent=t||"";e.hidden=!t}
+function setError(t){var e=$("error");e.textContent=t||"";e.hidden=!t;if(t){var b=document.createElement("button");b.type="button";b.textContent="Erneut versuchen";b.style.cssText="display:block;margin-top:8px;width:100%";b.addEventListener("click",function(){if(curRt)run(curRt)});e.appendChild(b)}}
+function gkLog(kind,msg){
+  try{var l=JSON.parse(ls("gk_log")||"[]");l.push([Date.now(),typeof VERSION!=="undefined"?VERSION:"?",kind,String(msg).slice(0,200)]);if(l.length>150)l=l.slice(-150);ls("gk_log",JSON.stringify(l))}catch(e){}
+  try{if(window.gkLogRender)window.gkLogRender()}catch(e){}
+}
+window.addEventListener("error",function(e){gkLog("Fehler",(e.message||"?")+" ("+String(e.filename||"").split("/").pop()+":"+e.lineno+")")});
+window.addEventListener("unhandledrejection",function(e){gkLog("Fehler","Promise: "+(e.reason&&e.reason.message||e.reason))});
+window.addEventListener("online",function(){gkLog("Netz","wieder online")});
+window.addEventListener("offline",function(){gkLog("Netz","offline")});
 function fetchJson(url,ms){
-  var c=new AbortController(),to=setTimeout(function(){c.abort()},ms||25000);
-  return fetch(url,{signal:c.signal}).then(function(r){clearTimeout(to);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()});
+  var c=new AbortController(),to=setTimeout(function(){c.abort()},ms||25000),t0=Date.now(),h=String(url).split("/")[2]||url;
+  return fetch(url,{signal:c.signal}).then(function(r){clearTimeout(to);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()}).catch(function(e){clearTimeout(to);gkLog("Netz",h+": "+(e&&e.name==="AbortError"?"Zeitüberschreitung nach "+Math.round((Date.now()-t0)/1000)+" s":(e&&e.message||e)));throw e});
 }
 function fmtMin(m){m=Math.round(m);return m<60?m+" Min.":Math.floor(m/60)+" Std. "+String(m%60).padStart(2,"0")+" Min."}
 
@@ -540,16 +549,19 @@ function compute(rt,stage){
 function run(rt,k0){
   var id=++runId,eff=flip?{name:rt.name,from:rt.to,to:rt.from}:rt;curRt=rt;
   setError("");$("rtlabel").textContent=eff.name+": "+eff.from.n+" → "+eff.to.n+(rt===adhocRoute?" (einmalig)":(auto?" · automatisch, gilt "+hrsText(rt):""));
+  gkLog("Bedienung","Strecke: "+eff.name);
+  var cc0=loadCache(eff);if(cc0&&Date.now()-cc0.t<6*3600e3){showCache(eff,cc0);$("bt").textContent="Letzter Stand, wird aktualisiert …"}
   setStatus("Route wird berechnet …");show("sliderBox",false);
   compute(eff,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
     saveCache(eff,d);d.flip=flip;S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
-    setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);loadMeasure(d);
+    setStatus("");gkLog("Info","Strecke geladen ("+Math.round(d.km)+" km)");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);loadMeasure(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
+    gkLog("Fehler","Strecke laden: "+(e&&e.message||e));
     var cc=loadCache(eff);if(cc){showCache(eff,cc);setError("Keine Verbindung. Angezeigt wird der letzte gespeicherte Stand.");return}
-    setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
+    setError(e&&e.name==="AbortError"?"Zeitüberschreitung beim Laden.":(e&&e.message?e.message:"Fehler beim Laden."));
   });
 }
 
@@ -762,6 +774,11 @@ function loadReports(){
   }).catch(function(){});
 }
 window.loadReportsDeferred=loadReports;
+window.gkLogRender=function(){var b=$("logBox");if(!b)return;var l=[];try{l=JSON.parse(ls("gk_log")||"[]")}catch(e){}
+b.value=l.slice().reverse().map(function(x){var d=new Date(x[0]);return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("de-DE")+" v"+x[1]+" "+x[2]+": "+x[3]}).join("\n")||"Noch keine Einträge."};
+$("logCopy").addEventListener("click",function(){var b=$("logBox");b.select();try{navigator.clipboard.writeText(b.value)}catch(e){document.execCommand("copy")}});
+$("logClear").addEventListener("click",function(){ls("gk_log","[]");window.gkLogRender()});
+window.gkLogRender();gkLog("Info","App gestartet, "+(navigator.onLine?"online":"offline"));
 $("rkIn").value=ls("gk_rk")?"Gespeichert":"";$("rkSt").textContent=ls("gk_rk")?"Schlüssel ist gespeichert.":"Noch kein Schlüssel gespeichert.";
 $("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0-9a-f]{16,64})\s*$/);if(!m){$("rkSt").textContent="Kein gültiger Schlüssel erkannt.";return}ls("gk_rk",m[1]);$("rkIn").value="Gespeichert";$("rkSt").textContent="Gespeichert. Tesla wird geladen …";if(window.loadTeslaDeferred)window.loadTeslaDeferred()});
 (function(){var m=location.hash.match(/rk=([0-9a-f]{16,64})/);if(m){ls("gk_rk",m[1]);history.replaceState(null,"",location.pathname+location.search)}})();

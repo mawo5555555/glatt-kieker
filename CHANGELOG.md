@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.31 – 25.11.2026
+- Logbuch in den Optionen (Fehler, Netz, Bedienung, mit Uhrzeit und Version), kopierbar.
+- Schnellerer Start: der letzte Stand erscheint sofort, die Aktualisierung läuft danach.
+- Bei Ladefehlern gibt es den Knopf „Erneut versuchen".
+
 ## Version 1.30 – 25.11.2026
 - Strecke wird zwischengespeichert und bei Routing-Problemen erneut versucht. Die Karte hängt nicht mehr bei „Strecke wird geladen".
 
