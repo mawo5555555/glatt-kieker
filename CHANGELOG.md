@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.27 – 25.11.2026
+- Kein simuliertes Auto mehr, das hin und her fährt. Mit Tesla-Link zeigt die Karte nur den echten Tesla (fährt: "jetzt", sonst: "geparkt" mit Uhrzeit).
+
 ## Version 1.26 – 25.11.2026
 - Neue Ansicht für große Bildschirme (z. B. Tesla-Display): größere Schrift und Kacheln links, Strecke rechts daneben, größere Karten-Knöpfe. Handy unverändert.
 

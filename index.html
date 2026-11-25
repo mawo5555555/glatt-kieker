@@ -294,7 +294,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.26",VDATE="25.11.2026";
+var VERSION="1.27",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -765,11 +765,11 @@ function loadTesla(){
     var live=Date.now()-T.ts<10*60e3,tm=new Date(T.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}),tp=T.temp_out==null?"":" · "+String(Math.round(T.temp_out*10)/10).replace(".",",")+" °C";
     if(live){
       var q=recent[1],deg=q?bearing([q.lon,q.lat],[T.lon,T.lat])-90:-90;
-      if(window.gkCarM&&window.gkCarM._map){window.gkCarM.remove();if(typeof carRaf!=="undefined"&&carRaf)cancelAnimationFrame(carRaf)}
       L.marker([T.lat,T.lon],{icon:carIcon(deg),zIndexOffset:1100}).bindTooltip("Tesla jetzt"+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
     }else{
-      L.marker([T.lat,T.lon],{icon:L.divIcon({className:"tesm",html:"<div>🚗 Tesla "+tm+tp+"</div>",iconSize:[0,0]}),zIndexOffset:1050}).addTo(lay);
+      L.marker([T.lat,T.lon],{icon:carIcon(-90),zIndexOffset:1100}).bindTooltip("Tesla geparkt "+tm+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
     }
+    if(window.gkCarM&&window.gkCarM._map)window.gkCarM.remove();
   }).catch(function(){});
 }
 window.loadTeslaDeferred=loadTesla;setInterval(loadTesla,60000);
@@ -970,7 +970,7 @@ function drawMini(){
   var deg=pa&&pb?bearing(pa,pb):90;
   var carM=L.marker([o.lat,o.lon],{icon:carIcon(deg-90),zIndexOffset:1000}).addTo(mini);
   lastAll=all;
-  startCar(S.flip?all.slice().reverse():all,carM);
+  if(ls("gk_rk"))carM.remove();
   if(!window.gkRepLayer||window.gkRepLayer._map!==mini){window.gkRepLayer=L.layerGroup().addTo(mini)}
   mini.invalidateSize();fitRoute();
   window.gkCarM=carM;window.gkTeslaLayer=L.layerGroup().addTo(mini);
