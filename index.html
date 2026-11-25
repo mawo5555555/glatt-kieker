@@ -139,7 +139,6 @@ button.danger{color:var(--bad);border-color:var(--bad)}
       <div class="lg"><span><i style="background:var(--ok)"></i>unbedenklich</span><span><i style="background:var(--warn)"></i>Vorsicht</span><span><i style="background:var(--bad)"></i>Gefahr</span></div>
     </section>
 
-    <section class="card"><h2 class="sec" id="listH">Abschnitte</h2><ul id="list"></ul></section>
   </div>
 
   <!-- 4. Strecken und Orte -->
@@ -165,7 +164,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.2",VDATE="25.11.2026";
+var VERSION="1.3",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -420,7 +419,7 @@ function drawAll(){
   $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
   var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
-  drawWx();drawMap();drawList();
+  drawWx();drawMap();
 }
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
@@ -456,16 +455,6 @@ function drawMap(){
   L.circleMarker([S.B.lat,S.B.lon],{radius:7,color:"#fff",fillColor:"#14212b",fillOpacity:1,weight:3}).bindTooltip(S.B.n).addTo(layer);
   map.invalidateSize();
   if(S!==drawMap.last){map.fitBounds(L.latLngBounds(latlngs),{padding:[16,16]});drawMap.last=S}
-}
-function drawList(){
-  var h="",i=hour,onlyBad=S.segs.length>30;
-  S.segs.forEach(function(s,idx){
-    var l=s.lv[i];if(onlyBad&&l===0)return;
-    h+='<li><details><summary><span class="pill l'+l+'">'+NAME[l]+'</span><span class="nm">Abschnitt '+(idx+1)+'</span><span class="km">'+(s.m/1000).toFixed(1).replace(".",",")+' km</span></summary><p class="why">'+s.why[i]+'</p></details></li>';
-  });
-  if(!h)h='<li><p class="why" style="padding:6px 0">Alle '+S.segs.length+' Abschnitte unauffällig.</p></li>';
-  $("listH").textContent=onlyBad?"Auffällige Abschnitte":"Abschnitte";
-  $("list").innerHTML=h;
 }
 
 /* ---------- Wetter-Hintergrund (Canvas) ---------- */

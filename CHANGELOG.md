@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.3 – 25.11.2026
+- Liste „Abschnitte“ entfernt.
+
 ## Version 1.2 – 25.11.2026
 - Kacheln transparenter, Hintergrund besser sichtbar.
 - Startort heißt „Sonnenberg, Gransee“; keine Schnellwahl-Buttons mehr.
