@@ -102,6 +102,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 .cm small{color:var(--muted)}
 .cm.l0 .cd{background:var(--ok)}.cm.l1 .cd{background:var(--warn)}.cm.l2 .cd{background:var(--bad)}
 .cm.l1{border-color:var(--warn)}.cm.l2{border-color:var(--bad)}
+.greet{margin:0 4px 6px;font-size:1.1rem;font-weight:600;color:var(--fg)}
 .al{margin-top:8px;border:1px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:8px 10px;font-size:.9rem}.al summary{font-weight:600;cursor:pointer}
 .ol{margin:8px 0 0;font-size:.9rem}.ol.w{padding:6px 10px;border-left:4px solid var(--warn);background:var(--warn-bg);border-radius:6px}
 </style>
@@ -120,6 +121,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
   </div>
 
   <!-- 1. Straßenstatus -->
+  <p class="greet" id="greet"></p>
   <section class="card" aria-label="Straßenstatus">
     <div class="banner l0" id="banner"><div class="dot" id="dot">…</div><div><b id="bt">Lade Strecke …</b><span id="bs"></span></div></div>
     <p class="rtlabel" id="rtlabel"></p>
@@ -180,7 +182,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.8",VDATE="25.11.2026";
+var VERSION="1.9",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -422,11 +424,12 @@ function run(rt,k0){
   setStatus("Route wird berechnet …");show("sliderBox",false);
   compute(rt,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
-    S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
+    saveCache(rt,d);S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
     setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
+    var cc=loadCache(rt);if(cc){showCache(rt,cc);setError("Keine Verbindung. Angezeigt wird der letzte gespeicherte Stand.");return}
     setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
   });
 }
@@ -672,6 +675,27 @@ BG.set("idle",false);
 
 
 
+/* ---------- Begrüßung ---------- */
+function greet(){
+  var h=berlinParts().h,txt=h<5?"Gute Nacht":h<10?"Guten Morgen, gute Fahrt!":h<17?"Hallo, schönen Tag!":h<21?"Guten Abend!":"Gute Nacht";
+  $("greet").textContent=txt;
+}
+greet();setInterval(greet,600000);
+
+/* ---------- Offline-Stand ---------- */
+function saveCache(rt,d){
+  try{ls("gk_c_"+rt.from.lat.toFixed(3)+rt.from.lon.toFixed(3)+rt.to.lat.toFixed(3)+rt.to.lon.toFixed(3),JSON.stringify({t:Date.now(),times:d.times.slice(d.start,d.start+d.n),worst:Array.from({length:d.n},function(_,k){return levelAt(d,k)}),km:d.km,dur:d.durMin,A:d.A.n,B:d.B.n}))}catch(e){}
+}
+function loadCache(rt){
+  try{return JSON.parse(ls("gk_c_"+rt.from.lat.toFixed(3)+rt.from.lon.toFixed(3)+rt.to.lat.toFixed(3)+rt.to.lon.toFixed(3))||"null")}catch(e){return null}
+}
+function showCache(rt,c){
+  var lv=c.worst[0]||0,hh=new Date(c.t);
+  $("banner").className="banner l"+lv;$("dot").textContent=SYM[lv];
+  $("bt").textContent="Offline – letzter Stand";
+  $("bs").textContent=rt.name+" · Stand "+String(hh.getHours()).padStart(2,"0")+":"+String(hh.getMinutes()).padStart(2,"0")+" Uhr, Netz fehlt gerade";
+  $("rtlabel").textContent=rt.from.n+" → "+rt.to.n;
+}
 /* ---------- Bedienung ---------- */
 $("hr").addEventListener("input",function(e){hour=+e.target.value;if(S)drawAll()});
 $("auto").addEventListener("change",function(e){auto=e.target.checked;ls("gk_auto2",auto?"1":"0");if(auto)applyAuto(true)});

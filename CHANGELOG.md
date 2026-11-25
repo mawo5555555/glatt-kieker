@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.9 – 25.11.2026
+- Begrüßung je nach Tageszeit.
+- Offline: letzter gespeicherter Stand wird mit Uhrzeit angezeigt, wenn das Netz fehlt.
+
 ## Version 1.8 – 25.11.2026
 - Wetterfront wird nicht mehr als Text angezeigt, sondern fließt in die Bewertung ein (Stufe mindestens „Vorsicht“ ab Ankunft der Front).
 
