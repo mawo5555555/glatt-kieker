@@ -1,5 +1,11 @@
 # Änderungen
 
+## Version 1.43 – 25.11.2026
+- Wettermodelle gemittelt (ICON, ECMWF, GFS), Warnung bei uneinigen Modellen.
+- Regenradar (DWD): Kachel „Radar 2 Std." und Radar-Ebene auf der Karte.
+- Fahrtrichtung folgen (Karte dreht sich), Vollansicht, neues Tesla-Symbol.
+- Tesla-Temperatur wird mit der Prognose verglichen.
+
 ## Version 1.42 – 25.11.2026
 - Abgelehnter Tesla-Schlüssel wird gelöscht, die Kopplung startet dann automatisch; Tesla-Browser wird auch am Namen erkannt.
 

@@ -200,6 +200,10 @@ body.sheetopen #mapstatus{display:none}
 }
 .tesm div{transform:translate(-50%,-50%);display:inline-block;background:#1e6fd9;color:#fff;font:700 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .darkmap .leaflet-tile-pane{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.8)}.darkmap .leaflet-container{background:#1b1f24}
+#mapctl button.on{outline:3px solid #4aa8d0;background:#e6f4fb}
+.follow #topbar,.follow #mapinfo{display:none!important}
+.legend{position:absolute;left:12px;bottom:92px;z-index:500;background:rgba(20,33,43,.85);color:#fff;border-radius:10px;padding:6px 10px;font-size:.78rem;display:flex;gap:10px}
+.legend i{display:inline-block;width:18px;height:6px;border-radius:3px;margin-right:4px;vertical-align:middle}
 </style>
 </head>
 <body>
@@ -207,7 +211,7 @@ body.sheetopen #mapstatus{display:none}
 <div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
 <div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div><div id="mapinfo" aria-label="Wetter"></div></div>
 <div id="mapstatus"><button type="button" id="stBtn" class="l0" aria-label="Glätte-Status"><span class="dot" id="stDot">…</span><span><b id="stT">Lade Strecke …</b><span id="stS"></span></span></button><button type="button" id="optBtn"><i>⚙️</i>Optionen</button></div>
-<div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
+<div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="followBtn" aria-label="Fahrtrichtung folgen">🧭</button><button type="button" id="radarBtn" aria-label="Regenradar">🌧️</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
 <div id="sheet" class="closed"><div id="grip" role="button" aria-label="Fenster größer oder schließen" tabindex="0"><i></i></div><button type="button" id="shClose" aria-label="Schließen">✕</button><div id="sheetBody">
 <main>
 
@@ -277,6 +281,7 @@ body.sheetopen #mapstatus{display:none}
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate-src.js"></script>
 <script>
 (function(){
 var sh=document.getElementById("sheet"),gr=document.getElementById("grip"),root=document.documentElement;
@@ -301,7 +306,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.42",VDATE="25.11.2026";
+var VERSION="1.43",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -486,7 +491,14 @@ function fetchWeather(cells){
     var u="https://api.open-meteo.com/v1/forecast?latitude="+ch.map(function(c){return c.lat.toFixed(3)}).join(",")+
       "&longitude="+ch.map(function(c){return c.lon.toFixed(3)}).join(",")+"&hourly="+VARS.join(",")+
       "&models=icon_d2,icon_eu&past_hours=6&forecast_hours=66&timezone=Europe%2FBerlin&wind_speed_unit=ms";
-    return fetchJson(u,40000).then(function(d){return Array.isArray(d)?d:[d]});
+    var u2="https://api.open-meteo.com/v1/forecast?latitude="+ch.map(function(c){return c.lat.toFixed(3)}).join(",")+
+      "&longitude="+ch.map(function(c){return c.lon.toFixed(3)}).join(",")+"&hourly=temperature_2m,dew_point_2m,precipitation"+
+      "&models=ecmwf_ifs025,gfs_seamless&past_hours=6&forecast_hours=66&timezone=Europe%2FBerlin";
+    return fetchJson(u,40000).then(function(d){d=Array.isArray(d)?d:[d];
+      return fetchJson(u2,40000).then(function(e){e=Array.isArray(e)?e:[e];
+        d.forEach(function(x,i){var y=e[i];if(y&&y.hourly&&x.hourly)for(var k in y.hourly)if(k!=="time")x.hourly[k]=y.hourly[k]});return d
+      }).catch(function(){gkLog("Info","Zusatzmodelle nicht verfügbar");return d});
+    });
   })).then(function(parts){return [].concat.apply([],parts)});
 }
 function fetchWeatherC(cells,ck){
@@ -497,14 +509,33 @@ function fetchWeatherC(cells,ck){
     throw e;
   });
 }
+var ENSW={"temperature_2m":1,"dew_point_2m":1,"precipitation":1};
+function gI(h,k,i,def){
+  var a=h[k+"_icon_d2"],v=a?a[i]:null;
+  if(v==null){a=h[k+"_icon_eu"];v=a?a[i]:null}
+  if(v==null&&h[k])v=h[k][i];
+  return v==null?def:v;
+}
+function spread(h,i){
+  var m=[],a,v,n=["_icon_d2","_icon_eu","_ecmwf_ifs025","_gfs_seamless"];
+  for(var j=0;j<n.length;j++){a=h["temperature_2m"+n[j]];v=a?a[i]:null;if(v!=null)m.push(v)}
+  if(m.length<2)return 0;return Math.max.apply(null,m)-Math.min.apply(null,m);
+}
 function g(h,k,i,def){
+  if(ENSW[k]){
+    var sum=0,w=0,vi=gI(h,k,i,null),a,v;
+    if(vi!=null){sum+=vi*2;w+=2}
+    a=h[k+"_ecmwf_ifs025"];v=a?a[i]:null;if(v!=null){sum+=v*1.2;w+=1.2}
+    a=h[k+"_gfs_seamless"];v=a?a[i]:null;if(v!=null){sum+=v*0.6;w+=0.6}
+    if(w>0)return sum/w;
+  }
   var a=h[k+"_icon_d2"],v=a?a[i]:null;
   if(v==null){a=h[k+"_icon_eu"];v=a?a[i]:null}
   if(v==null&&h[k])v=h[k][i];
   return v==null?def:v;
 }
 function rate(h,i){
-  var t=g(h,"temperature_2m",i,5),td=g(h,"dew_point_2m",i,t-3),surf=g(h,"soil_temperature_0cm",i,t),
+  var t=g(h,"temperature_2m",i,5),td=g(h,"dew_point_2m",i,t-3),surf=g(h,"soil_temperature_0cm",i,t)+(t-gI(h,"temperature_2m",i,t))*0.7,
       rh=g(h,"relative_humidity_2m",i,70),code=g(h,"weather_code",i,0),rain=g(h,"rain",i,0),snow=g(h,"snowfall",i,0),
       cloud=g(h,"cloud_cover",i,100),wind=g(h,"wind_speed_10m",i,5),vis=g(h,"visibility",i,20000),day=g(h,"is_day",i,1);
   var pr=0,s12=0,j;
@@ -518,6 +549,8 @@ function rate(h,i){
   if(snow>0&&surf<=1)up(1,"Schneefall bei Fahrbahn "+surf.toFixed(1)+" °C: Schneeglätte möglich.");
   if(s12>=5)up(2,"Starker Schneefall ("+s12.toFixed(0)+" cm in 12 h): Schneeglätte.");
   if(t>=0&&t<=4&&cloud<=25&&wind<=3&&!day&&rh>=85)up(1,"Klare, windschwache Nacht bei "+t.toFixed(1)+" °C: Boden kann überfrieren.");
+  var sp=spread(h,i);
+  if(sp>=3&&surf<=1.5&&surf>=-1.5)up(1,"Wettermodelle uneinig (bis "+sp.toFixed(1)+" °C Unterschied), Fahrbahn um "+surf.toFixed(1)+" °C: Glätte nicht auszuschließen.");
   if(vis<150)up(2,"Sicht unter 150 m: Nebel.");else if(vis<1000)up(1,"Sicht unter 1 km: Nebel.");
   return best;
 }
@@ -728,11 +761,38 @@ function drawInfo(w,i){
     tile(pr>0.05?"l1":"",sn>0?"🌨️":(pr>0.05?"🌧️":"☀️"),sn>0?"Schneefall":"Niederschlag",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"keiner")+
     tile(fmin<=0?"l2":(fmin<=2?"l1":""),"❄️","Frost in 6 Std.",(fmin<=0?"ja":(fmin<=2?"knapp":"nein"))+" ("+Math.round(fmin)+"°)");
   var n=3;
+  if(window.gkRadar&&window.gkRadar.msg){var rr=window.gkRadar;h+=tile(rr.lv?"l1":"","🌧️","Radar 2 Std.",rr.msg);n=2}
   $("mapinfo").style.setProperty("--n",n);$("mapinfo").innerHTML=h;
   $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];$("stT").textContent=$("bt").textContent;
   $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt");
 }
 window.gkRedrawInfo=function(){drawInfo()};
+window.gkForecastAt=function(lat,lon){
+  if(!S||!S.cells)return null;var best=-1,bd=1e9;
+  S.cells.forEach(function(c,i){var d=L.latLng(c.lat,c.lon).distanceTo(L.latLng(lat,lon));if(d<bd){bd=d;best=i}});
+  if(best<0||bd>8000)return null;return g(S.w[best].hourly,"temperature_2m",S.start,null);
+};
+window.loadRadarDeferred=function(){
+  if(!S||!S.segs)return;
+  var key=S.A.lat+","+S.B.lat+","+S.A.lon+","+S.B.lon;
+  if(window.gkRadar&&window.gkRadar.key===key&&Date.now()-window.gkRadar.t<300000)return;
+  var all=[];S.segs.forEach(function(sg){all.push(sg.pts[Math.floor(sg.pts.length/2)])});
+  var pts=[all[0],all[Math.floor(all.length/2)],all[all.length-1]];
+  Promise.all(pts.map(function(p){return fetchJson("https://api.brightsky.dev/radar?lat="+p[1].toFixed(3)+"&lon="+p[0].toFixed(3)+"&distance=12000&format=plain",15000)})).then(function(rs){
+    var first=null,now=Date.now();
+    rs.forEach(function(d){
+      var pos=d&&d.latlon_position,rad=d&&d.radar;if(!pos||!rad)return;
+      rad.forEach(function(fr){
+        var g5=fr.precipitation_5,cx=Math.round(pos.x),cy=Math.round(pos.y),m=0,dx,dy;
+        for(dy=-1;dy<=1;dy++)for(dx=-1;dx<=1;dx++){var row=g5[cy+dy];if(row&&row[cx+dx]>m)m=row[cx+dx]}
+        if(m>=5){var mins=Math.max(0,Math.round((new Date(fr.timestamp).getTime()-now)/60000));if(first===null||mins<first)first=mins}
+      });
+    });
+    var msg=first===null?"trocken":(first<=5?"Regen jetzt":"Regen in "+first+" Min.");
+    window.gkRadar={key:key,t:Date.now(),msg:msg,lv:first!==null&&first<=60};
+    gkLog("Info","Radar: "+msg);if(window.gkRedrawInfo)window.gkRedrawInfo();
+  }).catch(function(e){gkLog("Info","Radar nicht verfügbar")});
+};
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
   return '<div class="c"><small>'+name+'</small><div class="t">'+ic[0]+" "+Math.round(t)+'°</div><small>'+ic[1]+' · Wind '+Math.round(wd*3.6)+' km/h'+(p>0?' · '+p.toFixed(1).replace(".",",")+' mm':'')+'</small></div>';
@@ -945,11 +1005,16 @@ function loadTesla(){
     if(!lay||!T)return;lay.clearLayers();
     var recent=p.filter(function(x){return T.ts-x.ts<2*3600e3});
     var live=Date.now()-T.ts<10*60e3,tm=new Date(T.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}),tp=T.temp_out==null?"":" · "+String(Math.round(T.temp_out*10)/10).replace(".",",")+" °C";
-    if(live){
-      var q=recent[1],deg=q?bearing([q.lon,q.lat],[T.lon,T.lat])-90:-90;
-      L.marker([T.lat,T.lon],{icon:carIcon(deg),zIndexOffset:1100}).bindTooltip("Tesla jetzt"+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
-    }else{
-      L.marker([T.lat,T.lon],{icon:carIcon(-90),zIndexOffset:1100}).bindTooltip("Tesla geparkt "+tm+tp,{permanent:true,direction:"top",offset:[0,-14]}).addTo(lay);
+    var dv="";
+    try{if(T.temp_out!=null&&window.gkForecastAt){var fc=window.gkForecastAt(T.lat,T.lon);if(fc!=null&&Math.abs(T.temp_out-fc)>=1){dv=" (Prognose "+String(Math.round(fc*10)/10).replace(".",",")+" °)";gkLog("Info","Tesla misst "+T.temp_out+" °C, Prognose "+fc.toFixed(1)+" °C")}}}catch(x){}
+    var hd=null,j;for(j=1;j<recent.length&&hd===null;j++){var qq=recent[j];if(L.latLng(qq.lat,qq.lon).distanceTo(L.latLng(T.lat,T.lon))>25)hd=bearing([qq.lon,qq.lat],[T.lon,T.lat])}
+    if(hd!==null)window.gkHeading=hd;
+    var follow=ls("gk_follow")==="1",rot=!!(window.gkMap&&window.gkMap.setBearing);
+    var deg=(follow&&rot)?-90:(hd!==null?hd-90:-90);
+    L.marker([T.lat,T.lon],{icon:carIcon(deg),zIndexOffset:1100}).bindTooltip((live?"Tesla jetzt":"Tesla geparkt "+tm)+tp+dv,{permanent:true,direction:"top",offset:[0,-20]}).addTo(lay);
+    if(follow&&window.gkMap){
+      if(rot)window.gkMap.setBearing(live&&window.gkHeading!=null?window.gkHeading:0);
+      window.gkMap.setView([T.lat,T.lon],16,{animate:true});
     }
     if(window.gkCarM&&window.gkCarM._map)window.gkCarM.remove();
   }).catch(function(e){if(e!==0){$("rkSt")&&($("rkSt").textContent="Tesla: Netzfehler "+(e&&e.message||e));gkLog("Fehler","Tesla: "+(e&&e.message||e))}});
@@ -1077,21 +1142,20 @@ var mini=null,miniTiles=null;
 function bearing(a,b){var p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dl=(b[0]-a[0])*Math.PI/180;
   var y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360}
 function carIcon(deg){
-  var svg='<svg viewBox="0 0 100 52" width="62" height="32" xmlns="http://www.w3.org/2000/svg" style="transform:rotate('+deg+'deg);transform-origin:50% 50%;overflow:visible">'
-  +'<defs><linearGradient id="gb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#eef1f4"/><stop offset="1" stop-color="#cfd5db"/></linearGradient>'
-  +'<linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3a4a58"/><stop offset=".5" stop-color="#121a22"/><stop offset="1" stop-color="#2a3744"/></linearGradient>'
-  +'<radialGradient id="gs" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient></defs>'
-  +'<ellipse cx="50" cy="29" rx="48" ry="19" fill="url(#gs)"/>'
-  +'<rect x="16" y="2.5" width="15" height="6" rx="3" fill="#15191d"/><rect x="16" y="43.5" width="15" height="6" rx="3" fill="#15191d"/><rect x="64" y="2.5" width="15" height="6" rx="3" fill="#15191d"/><rect x="64" y="43.5" width="15" height="6" rx="3" fill="#15191d"/>'
-  +'<path d="M5 26 C5 13 11 7 24 6 L68 6 C84 6 96 14 97 26 C96 38 84 46 68 46 L24 46 C11 45 5 39 5 26 Z" fill="url(#gb)" stroke="#aab3bb" stroke-width="1"/>'
-  +'<path d="M26 11.5 L58 10.5 C67 10.5 74 16 76 26 C74 36 67 41.5 58 41.5 L26 40.5 C22 38 20 32 20 26 C20 20 22 14 26 11.5 Z" fill="url(#gg)"/>'
-  +'<path d="M30 14 L56 13.2 C62 14 67 17 69 21 L30 21 Z" fill="#fff" opacity=".13"/>'
-  +'<path d="M76 26 C75 17 68 11.5 61 11 L64 11.5 C71 12.5 79 18 80.5 26 C79 34 71 39.5 64 40.5 L61 41 C68 40.5 75 35 76 26Z" fill="#9db0bf" opacity=".55"/>'
-  +'<ellipse cx="63" cy="4.6" rx="5.5" ry="2.4" fill="#e9edf0" stroke="#9aa4ad" stroke-width=".8"/><ellipse cx="63" cy="47.4" rx="5.5" ry="2.4" fill="#e9edf0" stroke="#9aa4ad" stroke-width=".8"/>'
-  +'<path d="M93 17 C96 19 97 22.5 97 26 L94 26 C94 23 93.5 20 91 18 Z" fill="#fff6d8" stroke="#d9c88a" stroke-width=".6"/><path d="M93 35 C96 33 97 29.5 97 26 L94 26 C94 29 93.5 32 91 34 Z" fill="#fff6d8" stroke="#d9c88a" stroke-width=".6"/>'
-  +'<path d="M5.5 19 L8.5 19 L8.5 33 L5.5 33 Z" fill="#d6252f"/>'
+  var svg='<svg viewBox="0 0 120 56" width="84" height="40" xmlns="http://www.w3.org/2000/svg" style="transform:rotate('+deg+'deg);transform-origin:50% 50%;overflow:visible">'
+  +'<defs><linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#f1f3f5"/><stop offset="1" stop-color="#c9d0d6"/></linearGradient>'
+  +'<linearGradient id="tg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2d3a46"/><stop offset=".55" stop-color="#0d141b"/><stop offset="1" stop-color="#26323d"/></linearGradient></defs>'
+  +'<ellipse cx="60" cy="31" rx="56" ry="21" fill="#000" opacity=".28"/>'
+  +'<rect x="22" y="1.5" width="18" height="7" rx="3.5" fill="#101417"/><rect x="22" y="47.5" width="18" height="7" rx="3.5" fill="#101417"/><rect x="78" y="1.5" width="18" height="7" rx="3.5" fill="#101417"/><rect x="78" y="47.5" width="18" height="7" rx="3.5" fill="#101417"/>'
+  +'<path d="M4 28 C4 15 9 8 21 6.5 L62 5 C82 4.5 100 8 110 17 C115 21 116 25 116 28 C116 31 115 35 110 39 C100 48 82 51.5 62 51 L21 49.5 C9 48 4 41 4 28 Z" fill="url(#tb)" stroke="#a7b0b8" stroke-width="1.2"/>'
+  +'<path d="M36 10.5 C52 8.5 66 9 76 13 C84 16.5 88 22 88 28 C88 34 84 39.5 76 43 C66 47 52 47.5 36 45.5 C31 40 29.5 34 29.5 28 C29.5 22 31 16 36 10.5 Z" fill="url(#tg)"/>'
+  +'<path d="M40 13 C54 11.5 66 12.5 74 16 C79 18.5 82 21 83 24 L38 24 C35 20 36 16 40 13 Z" fill="#fff" opacity=".12"/>'
+  +'<path d="M88 28 C88 21 84 16 77 13 L86 14.5 C95 17 101 22 102 28 C101 34 95 39 86 41.5 L77 43 C84 40 88 34 88 28 Z" fill="#aebdc9" opacity=".6"/>'
+  +'<rect x="70" y="2.2" width="9" height="3.6" rx="1.8" fill="#14181b"/><rect x="70" y="50.2" width="9" height="3.6" rx="1.8" fill="#14181b"/>'
+  +'<path d="M108 14.5 C112 17 114 21 114.5 25 L111 25 C110.5 22 109 19 106 17 Z" fill="#fff7d6" stroke="#dbc98c" stroke-width=".6"/><path d="M108 41.5 C112 39 114 35 114.5 31 L111 31 C110.5 34 109 37 106 39 Z" fill="#fff7d6" stroke="#dbc98c" stroke-width=".6"/>'
+  +'<path d="M5 18 C4.2 22 4 25 4 28 C4 31 4.2 34 5 38 L8.5 37 C8 34 8 31 8 28 C8 25 8 22 8.5 19 Z" fill="#d3202c"/>'
   +'</svg>';
-  return L.divIcon({className:"carico",html:svg,iconSize:[62,32],iconAnchor:[31,16]});
+  return L.divIcon({className:"carico",html:svg,iconSize:[84,40],iconAnchor:[42,20]});
 }
 var base="map";
 function tiles(sat){
@@ -1121,11 +1185,11 @@ function startCar(path,m){
 }
 var lastAll=null;
 function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();var tb=document.getElementById("topbar"),ms=document.getElementById("mapstatus"),top=(tb?tb.getBoundingClientRect().bottom:120)+14,bot=(window.gkVis>0?window.gkVis:(ms?window.innerHeight-ms.getBoundingClientRect().top:100))+14;var wide=window.innerWidth>=900&&window.innerHeight>=560;mini.fitBounds(L.polyline(lastAll).getBounds(),wide?{paddingTopLeft:[690,40],paddingBottomRight:[110,40],maxZoom:15}:{paddingTopLeft:[24,top],paddingBottomRight:[66,bot],maxZoom:15})}
-$("locBtn").addEventListener("click",function(){fitRoute()});
+$("locBtn").addEventListener("click",function(){if(ls("gk_follow")==="1")setFollow(false);if(mini&&mini.setBearing)mini.setBearing(0);fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
   show("minibox",true);
-  if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false});window.gkMap=mini;L.control.attribution({prefix:false,position:"bottomright"}).addTo(mini)}
+  if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false,rotate:!!(L.Map&&L.Map.mergeOptions&&L.Map.prototype.setBearing),bearing:0,touchRotate:false,rotateControl:false});mini.on("dragstart",function(){if(ls("gk_follow")==="1")setFollow(false)});window.gkMap=mini;L.control.attribution({prefix:false,position:"bottomright"}).addTo(mini)}
   var old=[];mini.eachLayer(function(x){old.push(x)});old.forEach(function(x){mini.removeLayer(x)});
   tiles(ls("gk_sat")==="1").addTo(mini);
   var all=[];
@@ -1153,12 +1217,23 @@ function drawMini(){
   var carM=L.marker([o.lat,o.lon],{icon:carIcon(deg-90),zIndexOffset:1000}).addTo(mini);
   lastAll=all;
   if(ls("gk_rk"))carM.remove();
+  if(ls("gk_radar")==="1"){L.tileLayer.wms("https://maps.dwd.de/geoserver/dwd/wms",{layers:"dwd:Radar_rv_product_1x1km_ger",format:"image/png",transparent:true,opacity:.65,version:"1.3.0",attribution:"Radar © DWD",_t:Math.floor(Date.now()/300000)}).addTo(mini)}
+  if(window.loadRadarDeferred)window.loadRadarDeferred();
   if(!window.gkRepLayer||window.gkRepLayer._map!==mini){window.gkRepLayer=L.layerGroup().addTo(mini)}
   mini.invalidateSize();fitRoute();
   window.gkCarM=carM;window.gkTeslaLayer=L.layerGroup().addTo(mini);
   if(window.loadReportsDeferred)window.loadReportsDeferred();
   if(window.loadTeslaDeferred)window.loadTeslaDeferred();
 }
+function setFollow(on){
+  ls("gk_follow",on?"1":"0");document.documentElement.classList.toggle("follow",on);$("followBtn").classList.toggle("on",on);
+  if(!on&&mini&&mini.setBearing)mini.setBearing(0);
+  if(on&&window.loadTeslaDeferred)window.loadTeslaDeferred();
+}
+$("followBtn").addEventListener("click",function(){setFollow(ls("gk_follow")!=="1")});
+$("radarBtn").classList.toggle("on",ls("gk_radar")==="1");
+$("radarBtn").addEventListener("click",function(){var on=ls("gk_radar")!=="1";ls("gk_radar",on?"1":"0");$("radarBtn").classList.toggle("on",on);drawMini()});
+document.documentElement.classList.toggle("follow",ls("gk_follow")==="1");$("followBtn").classList.toggle("on",ls("gk_follow")==="1");
 $("satBtn").addEventListener("click",function(){ls("gk_sat",ls("gk_sat")==="1"?"0":"1");drawMini()});
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});
 
