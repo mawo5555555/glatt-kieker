@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.17 – 25.11.2026
+- Mini-Karte überarbeitet: sauberer Streckenstrich mit Schatten, größeres Auto, das in Fahrtrichtung zeigt, kräftigere Kartenfarben.
+
 ## Version 1.16 – 25.11.2026
 - Auto auf der Mini-Karte ist ein weißes Tesla Model 3 (Draufsicht).
 

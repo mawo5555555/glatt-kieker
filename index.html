@@ -106,13 +106,13 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 .al{margin-top:8px;border:1px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:8px 10px;font-size:.9rem}.al summary{font-weight:600;cursor:pointer}
 .ol{margin:8px 0 0;font-size:.9rem}.ol.w{padding:6px 10px;border-left:4px solid var(--warn);background:var(--warn-bg);border-radius:6px}
 .mini-wrap{margin-top:10px}
-#mini{height:150px;border-radius:12px;background:var(--sky);overflow:hidden}
+#mini{height:190px;border-radius:12px;background:var(--sky);overflow:hidden}
 .dir{margin-top:8px;width:100%}
 .rt-line{stroke-dasharray:10 10;animation:flow 1.2s linear infinite}
 .rt-line.rev{animation-direction:reverse}
 @keyframes flow{to{stroke-dashoffset:-20}}
 .alertico{font-size:20px;line-height:26px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
-.sat{filter:saturate(.85) contrast(1.05) brightness(.97)}
+.sat{filter:saturate(1.15) contrast(1.08) brightness(1.02)}
 #mini{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 6px 18px rgba(0,0,0,.25)}
 .carico{font-size:22px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
 .card{animation:rise .5s ease both}
@@ -199,7 +199,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.16",VDATE="25.11.2026";
+var VERSION="1.17",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -714,25 +714,35 @@ BG.set("idle",false);
 
 /* ---------- Mini-Karte und Richtung ---------- */
 var mini=null,miniTiles=null;
+function bearing(a,b){var p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dl=(b[0]-a[0])*Math.PI/180;
+  var y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360}
+function carIcon(deg){
+  var svg='<svg viewBox="0 0 44 26" width="44" height="26" xmlns="http://www.w3.org/2000/svg" style="transform:rotate('+deg+'deg);transform-origin:50% 50%;filter:drop-shadow(0 3px 3px rgba(0,0,0,.45))"><rect x="3" y="4" width="38" height="18" rx="8" fill="#f7f8fa" stroke="#9aa4ad" stroke-width="1"/><path d="M14 7 L18 3.5 H28 L32 7 Z" fill="#2b3640"/><path d="M14 19 L18 22.5 H28 L32 19 Z" fill="#2b3640"/><rect x="12" y="8.5" width="22" height="9" rx="3" fill="#1d2730" opacity=".9"/><rect x="6" y="2.5" width="5" height="3.5" rx="1.2" fill="#222b33"/><rect x="6" y="20" width="5" height="3.5" rx="1.2" fill="#222b33"/><rect x="33" y="2.5" width="5" height="3.5" rx="1.2" fill="#222b33"/><rect x="33" y="20" width="5" height="3.5" rx="1.2" fill="#222b33"/><rect x="39" y="7" width="3" height="3" rx="1" fill="#ffe2a0"/><rect x="39" y="16" width="3" height="3" rx="1" fill="#ffe2a0"/></svg>';
+  return L.divIcon({className:"carico",html:svg,iconSize:[44,26],iconAnchor:[22,13]});
+}
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
   show("minibox",true);
   if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false})}
   var old=[];mini.eachLayer(function(x){old.push(x)});old.forEach(function(x){mini.removeLayer(x)});
-  miniTiles=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,className:"sat"}).addTo(mini);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,className:"sat"}).addTo(mini);
   var all=[];
+  S.segs.forEach(function(s){all=all.concat(s.pts.map(function(p){return [p[1],p[0]]}))});
+  // Schatten, weißer Rand, dann Abschnittsfarben
+  L.polyline(all,{color:"#0b2233",weight:14,opacity:.25,lineCap:"round",lineJoin:"round"}).addTo(mini);
+  L.polyline(all,{color:"#ffffff",weight:10,opacity:.95,lineCap:"round",lineJoin:"round"}).addTo(mini);
   S.segs.forEach(function(s){
-    var ll=s.pts.map(function(p){return [p[1],p[0]]}),lv=s.lv[hour]||0;all=all.concat(ll);
-    L.polyline(ll,{color:"#ffffff",weight:11,opacity:.9,lineCap:"round",lineJoin:"round"}).addTo(mini);
-    L.polyline(ll,{color:COL[lv],weight:7,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
+    var ll=s.pts.map(function(p){return [p[1],p[0]]}),lv=s.lv[hour]||0;
+    L.polyline(ll,{color:COL[lv],weight:6,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
   });
-  L.polyline(all,{color:"#ffffff",weight:2,opacity:.85,dashArray:"4 10",lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
+  L.polyline(all,{color:"#ffffff",weight:1.5,opacity:.7,dashArray:"2 14",lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
   (S.alerts||[]).forEach(function(a){
     L.marker([a.lat,a.lon],{icon:L.divIcon({className:"alertico",html:"⚠️",iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip(a.e).addTo(mini);
   });
-  var o=S.flip?S.B:S.A;
-  L.marker([o.lat,o.lon],{icon:L.divIcon({className:"carico",html:'<svg viewBox="0 0 40 24" width="34" height="20" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="3" width="36" height="18" rx="7" fill="#f4f6f8" stroke="#8a949c" stroke-width="1"/><path d="M11 6.5 L14 3.5 H25 L28 6.5 Z" fill="#2b3640"/><path d="M11 17.5 L14 20.5 H25 L28 17.5 Z" fill="#2b3640"/><rect x="9" y="8" width="20" height="8" rx="2.5" fill="#1d2730" opacity=".85"/><rect x="5" y="2" width="4" height="3" rx="1" fill="#2b3640"/><rect x="5" y="19" width="4" height="3" rx="1" fill="#2b3640"/><rect x="31" y="2" width="4" height="3" rx="1" fill="#2b3640"/><rect x="31" y="19" width="4" height="3" rx="1" fill="#2b3640"/><rect x="34" y="6" width="3" height="3" rx="1" fill="#ffd27a"/><rect x="34" y="15" width="3" height="3" rx="1" fill="#ffd27a"/></svg>',iconSize:[34,20],iconAnchor:[17,10]})}).addTo(mini);
-  mini.invalidateSize();mini.fitBounds(L.polyline(all).getBounds(),{padding:[18,18]});
+  var o=S.flip?S.B:S.A,pa=all.length>1?(S.flip?all[all.length-1]:all[0]):null,pb=S.flip?all[all.length-2]:all[1];
+  var deg=pa&&pb?bearing(pa,pb):90;
+  L.marker([o.lat,o.lon],{icon:carIcon(deg-90)}).addTo(mini);
+  mini.invalidateSize();mini.fitBounds(L.polyline(all).getBounds(),{padding:[22,22]});
 }
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});
 
