@@ -199,7 +199,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.14",VDATE="25.11.2026";
+var VERSION="1.15",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -450,11 +450,19 @@ function run(rt,k0){
 }
 
 
+
+/* ---------- Prüfpunkte entlang der Strecke ---------- */
+function samplePts(d,k){
+  var n=d.segs.length,out=[];
+  for(var i=0;i<=k;i++){var s=d.segs[Math.min(n-1,Math.round(i*(n-1)/k))];out.push({lat:s.pts[0][1],lon:s.pts[0][0]})}
+  return out;
+}
+
 /* ---------- DWD-Warnungen (über Bright Sky) ---------- */
 var alertId=0;
 function loadAlerts(d){
   var id=++alertId,box=$("alerts");box.innerHTML="";
-  var pts=[d.A,d.segs[Math.floor(d.segs.length/2)].pts[0],d.B].map(function(p){return Array.isArray(p)?{lat:p[1],lon:p[0]}:p});
+  var pts=samplePts(d,8);
   Promise.all(pts.map(function(p){return fetchJson("https://api.brightsky.dev/alerts?lat="+p.lat.toFixed(3)+"&lon="+p.lon.toFixed(3),15000).catch(function(){return null})})).then(function(rs){
     if(id!==alertId)return;
     var seen={},out=[],now=Date.now();
@@ -479,7 +487,7 @@ function destPoint(lat,lon,brg,km){var R=6371,b=brg*Math.PI/180,p1=lat*Math.PI/1
 function compass(b){return ["Norden","Nordosten","Osten","Südosten","Süden","Südwesten","Westen","Nordwesten"][Math.round(b/45)%8]}
 function loadOutlook(d){
   var id=++outId,box=$("outlook");box.innerHTML="";
-  var mid=d.segs[Math.floor(d.segs.length/2)].pts[0],P=[{lat:d.A.lat,lon:d.A.lon,n:d.A.n},{lat:mid[1],lon:mid[0],n:"Streckenmitte"},{lat:d.B.lat,lon:d.B.lon,n:d.B.n}];
+  var mid=d.segs[Math.floor(d.segs.length/2)].pts[0],P=samplePts(d,4).map(function(p,i){return {lat:p.lat,lon:p.lon,n:i==0?d.A.n:i==4?d.B.n:"Streckenabschnitt "+i}});
   var base="https://api.open-meteo.com/v1/forecast?models=icon_d2,icon_eu&timezone=Europe%2FBerlin&wind_speed_unit=ms";
   function line(txt,cls){box.appendChild(el("p",{class:"ol "+(cls||""),text:txt}))}
   var q1=base+"&latitude="+P.map(function(p){return p.lat.toFixed(3)}).join(",")+"&longitude="+P.map(function(p){return p.lon.toFixed(3)}).join(",")+"&minutely_15=precipitation&forecast_minutely_15=8&hourly=wind_speed_850hPa,wind_direction_850hPa&forecast_hours=2";
@@ -494,7 +502,7 @@ function loadOutlook(d){
     var h=r[1].hourly,dir=h.wind_direction_850hPa_icon_d2||h.wind_direction_850hPa_icon_eu||h.wind_direction_850hPa,sp=h.wind_speed_850hPa_icon_d2||h.wind_speed_850hPa_icon_eu||h.wind_speed_850hPa;
     var from=dir&&dir[0],spd=sp&&sp[0];
     if(from==null||!spd||spd<1)return;
-    var ds=[50,100,150],U=ds.map(function(k){return destPoint(P[1].lat,P[1].lon,from,k)});
+    var ds=[50,100,150],U=ds.map(function(k){return destPoint(mid[1],mid[0],from,k)});
     var q2=base+"&latitude="+U.map(function(p){return p.lat.toFixed(3)}).join(",")+"&longitude="+U.map(function(p){return p.lon.toFixed(3)}).join(",")+"&hourly=temperature_2m,precipitation,snowfall&forecast_hours=12";
     return fetchJson(q2,20000).then(function(u){
       if(id!==outId)return;u=Array.isArray(u)?u:[u];

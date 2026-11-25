@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.15 – 25.11.2026
+- Warnungen und Niederschlag werden jetzt an 8 bzw. 5 Punkten entlang der Strecke geprüft, nicht nur Start, Mitte, Ziel.
+
 ## Version 1.14 – 25.11.2026
 - Amtliche Messung in der Nähe (DWD-Station Stechlin-Menz, über Bright Sky) unter der Wetterkachel.
 
