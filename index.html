@@ -297,7 +297,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.31",VDATE="25.11.2026";
+var VERSION="1.32",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -799,7 +799,7 @@ function loadTesla(){
     if(window.gkCarM&&window.gkCarM._map)window.gkCarM.remove();
   }).catch(function(){});
 }
-window.loadTeslaDeferred=loadTesla;setInterval(loadTesla,60000);
+window.loadTeslaDeferred=loadTesla;setInterval(function(){if(!document.hidden)loadTesla()},15000);document.addEventListener("visibilitychange",function(){if(!document.hidden)loadTesla()});
 })();
 function drawMap(){
   if(!$("map"))return;

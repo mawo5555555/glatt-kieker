@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.32 – 25.11.2026
+- Tesla-Standort alle 15 Sekunden neu geholt und sofort beim Zurückkehren in die App.
+
 ## Version 1.31 – 25.11.2026
 - Logbuch in den Optionen (Fehler, Netz, Bedienung, mit Uhrzeit und Version), kopierbar.
 - Schnellerer Start: der letzte Stand erscheint sofort, die Aktualisierung läuft danach.
