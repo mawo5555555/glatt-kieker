@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.29 – 25.11.2026
+- Warn-Schilder auf der Karte sitzen über der Straße und zeigen mit einem Strich auf die Stelle, die Straße bleibt sichtbar.
+- Keine gestrichelte Luftlinie mehr hinter dem Tesla.
+
 ## Version 1.28 – 25.11.2026
 - Neues Feld „Tesla live" in den Optionen: Tesla-Link oder Schlüssel einfügen. Nötig, weil die Home-Bildschirm-App den Link aus Safari nicht übernimmt.
 

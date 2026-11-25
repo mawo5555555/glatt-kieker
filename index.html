@@ -152,7 +152,8 @@ body{padding:0;overflow:hidden}
 #mapchips button.l0{border-color:var(--ok)}#mapchips button.l1{border-color:var(--warn)}#mapchips button.l2{border-color:var(--bad)}
 #mapchips .cd{font-weight:700}#mapchips .l0 .cd{color:var(--ok)}#mapchips .l1 .cd{color:var(--warn)}#mapchips .l2 .cd{color:var(--bad)}
 .riskpin{background:none;border:0}
-.riskpin div{transform:translate(-50%,-50%);display:inline-block;color:#fff;font:600 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #fff}
+.riskpin div:after{content:"";position:absolute;left:50%;top:100%;width:2px;height:14px;margin-left:-1px;background:#fff;box-shadow:0 0 3px rgba(0,0,0,.5)}
+.riskpin div{transform:translate(-50%,calc(-100% - 22px));position:relative;display:inline-block;color:#fff;font:600 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #fff}
 #sheet:not(.full) .greet{display:none}
 #sheet:not(.full) .opt{display:none}
 #mapctl{bottom:calc(var(--vis,0px) + 104px + env(safe-area-inset-bottom,0px))}
@@ -295,7 +296,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.28",VDATE="25.11.2026";
+var VERSION="1.29",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -764,7 +765,6 @@ function loadTesla(){
     if(window.gkRedrawInfo)window.gkRedrawInfo();
     if(!lay||!T)return;lay.clearLayers();
     var recent=p.filter(function(x){return T.ts-x.ts<2*3600e3});
-    if(recent.length>1)L.polyline(recent.map(function(x){return [x.lat,x.lon]}),{color:"#1e6fd9",weight:4,opacity:.7,dashArray:"6 6"}).addTo(lay);
     var live=Date.now()-T.ts<10*60e3,tm=new Date(T.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"}),tp=T.temp_out==null?"":" · "+String(Math.round(T.temp_out*10)/10).replace(".",",")+" °C";
     if(live){
       var q=recent[1],deg=q?bearing([q.lon,q.lat],[T.lon,T.lat])-90:-90;
