@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.12 – 25.11.2026
+- Strecken-Kacheln oben entfernt; stattdessen kleine Streckenkarte mit animierter Fahrtrichtung und Auto.
+- „Richtung wechseln“ tauscht Start und Ziel für die Ansicht.
+- Animationen: Einblenden der Karten, pulsierende Warnung bei Gefahr. Bei reduzierter Bewegung aus.
+
 ## Version 1.11 – 25.11.2026
 - Nachhall: War es 1–2 Stunden vor der Fahrt glatt und liegt die Fahrbahn noch bei höchstens +1 °C, bleibt die Bewertung mindestens „Vorsicht“.
 

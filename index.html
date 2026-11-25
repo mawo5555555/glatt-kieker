@@ -105,6 +105,19 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 .greet{margin:0 4px 6px;font-size:1.1rem;font-weight:600;color:var(--fg)}
 .al{margin-top:8px;border:1px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:8px 10px;font-size:.9rem}.al summary{font-weight:600;cursor:pointer}
 .ol{margin:8px 0 0;font-size:.9rem}.ol.w{padding:6px 10px;border-left:4px solid var(--warn);background:var(--warn-bg);border-radius:6px}
+.mini-wrap{margin-top:10px}
+#mini{height:150px;border-radius:12px;background:var(--sky);overflow:hidden}
+.dir{margin-top:8px;width:100%}
+.rt-line{stroke-dasharray:10 10;animation:flow 1.2s linear infinite}
+.rt-line.rev{animation-direction:reverse}
+@keyframes flow{to{stroke-dashoffset:-20}}
+.carico{font-size:22px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
+.card{animation:rise .5s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.banner.l2 .dot{animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.greet{animation:rise .6s ease both}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
 </style>
 </head>
 <body>
@@ -125,7 +138,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
   <section class="card" aria-label="Straßenstatus">
     <div class="banner l0" id="banner"><div class="dot" id="dot">…</div><div><b id="bt">Lade Strecke …</b><span id="bs"></span></div></div>
     <p class="rtlabel" id="rtlabel"></p>
-    <div class="tabs" id="tabs" role="group" aria-label="Strecke wählen"></div>
+    <div id="minibox" class="mini-wrap" hidden><div id="mini" role="img" aria-label="Streckenübersicht"></div><button type="button" class="dir" id="dirBtn">⇄ Richtung wechseln</button></div>
     <div class="slider" id="sliderBox" hidden style="margin-top:10px">
       <label for="hr" style="display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted)"><span>Abfahrt</span><b id="hl" style="color:var(--fg)"></b></label>
       <input type="range" id="hr" min="0" max="47" value="0" step="1">
@@ -182,7 +195,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.11",VDATE="25.11.2026";
+var VERSION="1.12",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -193,7 +206,7 @@ function el(tag,attrs,kids){
   (kids||[]).forEach(function(c){if(c)e.appendChild(c)});return e;
 }
 var S=null,hour=0,map=null,layer=null,busy=false;
-var routes=[],active=-1,auto=true,adhocRoute=null;
+var routes=[],active=-1,auto=true,adhocRoute=null,flip=false,curRt=null;
 
 /* ---------- Hilfen ---------- */
 function hav(a,b){var R=6371000,p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dp=p2-p1,dl=(b[0]-a[0])*Math.PI/180;
@@ -281,14 +294,7 @@ function pick(h){
   return 0;
 }
 function hrsText(r){return String(r.h0).padStart(2,"0")+"–"+String(r.h1).padStart(2,"0")+" Uhr"}
-function renderTabs(){
-  var t=$("tabs");t.innerHTML="";
-  routes.forEach(function(r,i){
-    var b=el("button",{type:"button","aria-pressed":String(i===active&&!adhocRoute),text:r.name+": "+r.from.n+" → "+r.to.n});
-    b.addEventListener("click",function(){auto=false;$("auto").checked=false;selectRoute(i)});
-    t.appendChild(b);
-  });
-}
+function renderTabs(){}
 function renderRoutes(){
   var box=$("routes");box.innerHTML="";
   routes.forEach(function(r,i){
@@ -330,7 +336,7 @@ function renderAdhoc(){
   });
   box.appendChild(a);box.appendChild(b);box.appendChild(go);
 }
-function selectRoute(i){adhocRoute=null;active=i;renderTabs();run(routes[i])}
+function selectRoute(i){if(i!==active)flip=false;adhocRoute=null;active=i;run(routes[i])}
 function applyAuto(force){
   if(!auto){if(active<0)selectRoute(pick(berlinParts().h));return}
   var i=pick(berlinParts().h);
@@ -424,17 +430,17 @@ function compute(rt,stage){
   });
 }
 function run(rt,k0){
-  var id=++runId;
-  setError("");$("rtlabel").textContent=rt.name+": "+rt.from.n+" → "+rt.to.n+(rt===adhocRoute?" (einmalig)":(auto?" · automatisch, gilt "+hrsText(rt):""));
+  var id=++runId,eff=flip?{name:rt.name,from:rt.to,to:rt.from}:rt;curRt=rt;
+  setError("");$("rtlabel").textContent=eff.name+": "+eff.from.n+" → "+eff.to.n+(rt===adhocRoute?" (einmalig)":(auto?" · automatisch, gilt "+hrsText(rt):""));
   setStatus("Route wird berechnet …");show("sliderBox",false);
-  compute(rt,function(m){if(id===runId)setStatus(m)}).then(function(d){
+  compute(eff,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
-    saveCache(rt,d);S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
+    saveCache(eff,d);d.flip=flip;S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
     setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
-    var cc=loadCache(rt);if(cc){showCache(rt,cc);setError("Keine Verbindung. Angezeigt wird der letzte gespeicherte Stand.");return}
+    var cc=loadCache(eff);if(cc){showCache(eff,cc);setError("Keine Verbindung. Angezeigt wird der letzte gespeicherte Stand.");return}
     setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
   });
 }
@@ -547,7 +553,7 @@ function drawAll(){
   $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
   var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
-  drawWx();drawMap();
+  drawWx();drawMap();drawMini();
 }
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
@@ -679,6 +685,22 @@ function sceneFor(h,idx){
 BG.set("idle",false);
 
 
+
+
+/* ---------- Mini-Karte und Richtung ---------- */
+var mini=null;
+function drawMini(){
+  if(typeof L==="undefined"||!S)return;
+  show("minibox",true);
+  if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false})}
+  var old=[];mini.eachLayer(function(x){old.push(x)});old.forEach(function(x){mini.removeLayer(x)});
+  var ll=[];S.segs.forEach(function(s){s.pts.forEach(function(p){ll.push([p[1],p[0]])})});
+  var line=L.polyline(ll,{color:"#1f6fa8",weight:6,lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
+  var o=S.flip?S.B:S.A;
+  L.marker([o.lat,o.lon],{icon:L.divIcon({className:"carico",html:"🚗",iconSize:[28,28],iconAnchor:[14,14]})}).addTo(mini);
+  mini.invalidateSize();mini.fitBounds(line.getBounds(),{padding:[16,16]});
+}
+$("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});
 
 /* ---------- Begrüßung ---------- */
 function greet(){
