@@ -140,15 +140,20 @@ body{padding:0;overflow:hidden}
 #topbar{position:fixed;top:max(8px,env(safe-area-inset-top,0px));left:8px;right:8px;z-index:4;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 #topbar h1{font-size:1.05rem}
 #topbar header{margin:0}
-#mapchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 0 2px}
+#mapchips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 0 2px}
+#mapinfo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:6px 0 0}
+.mt{background:var(--bg);border:2px solid var(--line);border-radius:10px;padding:4px 6px;min-width:0}
+.mt small{display:block;font-size:.66rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt b{display:block;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt.l0{border-color:var(--ok)}.mt.l1{border-color:var(--warn)}.mt.l2{border-color:var(--bad)}
 #mapchips::-webkit-scrollbar{display:none}
-#mapchips button{flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:.9rem;white-space:nowrap}
+#mapchips button{min-width:0;display:flex;align-items:center;justify-content:center;gap:4px;min-height:36px;padding:4px 4px;border-radius:999px;border:2px solid var(--line);background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:.74rem;white-space:nowrap;overflow:hidden}
 #mapchips button.l0{border-color:var(--ok)}#mapchips button.l1{border-color:var(--warn)}#mapchips button.l2{border-color:var(--bad)}
 #mapchips .cd{font-weight:700}#mapchips .l0 .cd{color:var(--ok)}#mapchips .l1 .cd{color:var(--warn)}#mapchips .l2 .cd{color:var(--bad)}
 .riskpin{background:none;border:0}
 .riskpin div{transform:translate(-50%,-50%);display:inline-block;color:#fff;font:600 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #fff}
 #sheet:not(.full) .greet{display:none}
-#sheet:not(.mid):not(.full) .opt{display:none}
+#sheet:not(.full) .opt{display:none}
 #mapctl{bottom:calc(var(--vis,230px) + 12px)}
 .rep{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
 .rep>div{background:var(--card);border-radius:16px;padding:16px;max-width:360px;width:100%}
@@ -162,7 +167,7 @@ body{padding:0;overflow:hidden}
 <body>
 <canvas id="bg" aria-hidden="true" hidden></canvas>
 <div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
-<div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div></div>
+<div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div><div id="mapinfo" aria-label="Wetter und Glätte"></div></div>
 <div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
 <div id="sheet"><div id="grip" role="button" aria-label="Infos größer oder kleiner" tabindex="0"><i></i></div><div id="sheetBody">
 <main>
@@ -249,7 +254,7 @@ gr.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){set((
 <script>
 (function(){
 "use strict";
-var VERSION="1.23",VDATE="25.11.2026";
+var VERSION="1.24",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -610,10 +615,10 @@ function renderCommute(){
       var mc=$("mapchips");mc.innerHTML="";
       items.forEach(function(it){
         var go=function(){auto=false;$("auto").checked=false;adhocRoute=null;active=it.r;renderTabs();run(routes[it.r],it.k);window.gkSheet&&window.gkSheet(0)};
-        var c=el("button",{type:"button",class:"l"+it.lv});
+        var c=el("button",{type:"button",class:"l"+it.lv});if(items.indexOf(it)<4){
         c.appendChild(el("span",{class:"cd",text:SYM[it.lv]}));
         c.appendChild(el("span",{text:DN[it.wd]+" "+String(it.h).padStart(2,"0")+":"+String(it.min).padStart(2,"0")}));
-        c.addEventListener("click",go);mc.appendChild(c);
+        c.addEventListener("click",go);mc.appendChild(c)}
         var b=el("button",{type:"button",class:"cm l"+it.lv});
         b.appendChild(el("span",{class:"cd",text:SYM[it.lv]}));
         b.appendChild(el("b",{text:DN[it.wd]+" "+String(it.h).padStart(2,"0")+":"+String(it.min).padStart(2,"0")}));
@@ -634,7 +639,19 @@ function drawAll(){
   $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
   var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
-  drawWx();drawMap();drawMini();
+  drawInfo(w,i);drawWx();drawMap();drawMini();
+}
+function drawInfo(w,i){
+  var hs=S.w[S.segs[0].cell].hourly,he=S.w[S.segs[S.segs.length-1].cell].hourly;
+  var a=S.start+i,arr=Math.min(S.times.length-1,a+Math.round(S.durMin/60));
+  var ts=g(hs,"temperature_2m",a,0),te=g(he,"temperature_2m",arr,0),fmin=99;
+  for(var k=0;k<=6;k++){var tt=g(hs,"temperature_2m",a+k,99);if(tt<fmin)fmin=tt}
+  var pr=g(hs,"precipitation",a,0)+g(he,"precipitation",arr,0);
+  var tile=function(c,l,v){return '<div class="mt '+c+'"><small>'+l+'</small><b>'+v+'</b></div>'};
+  $("mapinfo").innerHTML=tile("l"+w,"Glätte",["keine erwartet","Vorsicht","Gefahr"][w])+
+    tile("","Temp. Start / Ziel",Math.round(ts)+"° / "+Math.round(te)+"°")+
+    tile(pr>0.05?"l1":"","Niederschlag",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"trocken")+
+    tile(fmin<=0?"l2":(fmin<=2?"l1":"l0"),"Frost (6 Std.)",fmin<=0?"Frostgefahr":(fmin<=2?"nahe 0 °":"kein Frost"));
 }
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
@@ -855,7 +872,7 @@ function startCar(path,m){
   carRaf=requestAnimationFrame(step);
 }
 var lastAll=null;
-function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,130],paddingBottomRight:[30,(window.gkVis||230)+30]})}
+function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,190],paddingBottomRight:[30,(window.gkVis||230)+30]})}
 $("locBtn").addEventListener("click",function(){fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;

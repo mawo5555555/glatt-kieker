@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.24 – 25.11.2026
+- Vier Fahrt-Kacheln oben sichtbar, ohne Wischen.
+- Neue Kachelzeile auf der Karte: Glätte, Temperatur Start/Ziel, Niederschlag, Frost (nächste 6 Std.).
+- Unteres Fenster zeigt Optionen erst in der großen Stufe.
+
 ## Version 1.23 – 25.11.2026
 - Titel und Fahrten-Chips in einer Kopfleiste auf der Karte, die nicht mehr abgeschnitten wird.
 - Unteres Fenster zeigt im kleinen Zustand nur Ampel und Abfahrt. Frost-Warnung, Wetter, Strecken und Optionen erscheinen erst beim Hochziehen.
