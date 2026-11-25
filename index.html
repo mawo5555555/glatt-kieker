@@ -267,6 +267,7 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
@@ -297,7 +298,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.33",VDATE="25.11.2026";
+var VERSION="1.34",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -788,6 +789,67 @@ b.value=l.slice().reverse().map(function(x){var d=new Date(x[0]);return d.toLoca
 $("logCopy").addEventListener("click",function(){var b=$("logBox");b.select();try{navigator.clipboard.writeText(b.value)}catch(e){document.execCommand("copy")}});
 $("logClear").addEventListener("click",function(){ls("gk_log","[]");window.gkLogRender()});
 window.gkLogRender();gkLog("Info","App gestartet, "+(navigator.onLine?"online":"offline"));
+(function(){
+var PUB="BNW0uRCX4Hm10Aby2CxKaQMa-gASEmKa9b3SMEeIEj3g-8sQ2HtMaTgOpQWdULk6VT9C_izJsWLzyn6CxqdBGBQ",KEY="gk_push",DN2=["So","Mo","Di","Mi","Do","Fr","Sa"],ORDER=[1,2,3,4,5,6,0];
+var box=$("pushBox"),note=$("pushNote");if(!box)return;
+function defSl(){return [{on:true,d:[1,2,3,4,5],h:5,m:0,r:0,dh:6,dm:30},{on:true,d:[1,2,3,5],h:12,m:0,r:1,dh:13,dm:0},{on:true,d:[4],h:17,m:0,r:1,dh:17,dm:0}]}
+var cfg=null;try{cfg=JSON.parse(ls(KEY)||"null")}catch(e){}
+if(!cfg||!cfg.slots)cfg={slots:defSl(),change:true};
+var API=function(){return (ls("gk_report")||"https://glaettekieker-api.mawo555.workers.dev").replace(/\/+$/,"")};
+function supported(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window}
+function urlB64(b){var p="=".repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,"+").replace(/_/g,"/")),o=new Uint8Array(r.length),i;for(i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
+function post(path,body){return fetch(API()+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()})}
+function curSub(){return navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.getSubscription()})}
+function rts(){return routes.map(function(r){return {name:r.name,from:{n:r.from.n,lat:r.from.lat,lon:r.from.lon},to:{n:r.to.n,lat:r.to.lat,lon:r.to.lon}}})}
+function pad2(n){return String(n).padStart(2,"0")}
+function save(sub){ls(KEY,JSON.stringify(cfg));return post("/push/sub",{sub:sub.toJSON(),slots:cfg.slots,change:cfg.change,routes:rts()})}
+function say(t){note.textContent=t}
+function timeIn(h,m,cb){var i=document.createElement("input");i.type="time";i.value=pad2(h)+":"+pad2(m);i.style.cssText="width:auto;min-width:0";i.addEventListener("change",function(){var v=i.value.split(":");if(v.length===2)cb(+v[0],+v[1])});return i}
+function render(sub){
+  box.innerHTML="";
+  if(!supported()){say("Auf diesem Gerät nicht verfügbar. Auf dem iPhone zuerst über „Teilen“ → „Zum Home-Bildschirm“ installieren und die App von dort öffnen.");return}
+  if(Notification.permission==="denied"){say("Benachrichtigungen sind für diese App blockiert. In den iPhone-Einstellungen unter „Mitteilungen“ erlauben.");return}
+  if(!sub){
+    say("Noch nicht aktiviert. Du bekommst morgens und vor den Heimfahrten eine Nachricht zur Glätte-Lage.");
+    var b=document.createElement("button");b.type="button";b.className="go";b.textContent="Benachrichtigungen aktivieren";
+    b.addEventListener("click",function(){
+      say("Bitte erlauben …");
+      Notification.requestPermission().then(function(p){
+        if(p!=="granted"){say("Nicht erlaubt.");gkLog("Push","Erlaubnis: "+p);return}
+        return navigator.serviceWorker.ready.then(function(reg){return reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64(PUB)})}).then(function(sb){return save(sb).then(function(j){if(!j.ok)throw new Error(j.error||"Server");gkLog("Push","aktiviert");curSub().then(render)})});
+      }).catch(function(e){say("Aktivieren fehlgeschlagen: "+(e&&e.message||e));gkLog("Fehler","Push aktivieren: "+(e&&e.message||e))});
+    });
+    box.appendChild(b);return;
+  }
+  say("Aktiv. Die Zeiten kannst du hier ändern.");
+  cfg.slots.forEach(function(sl,idx){
+    var row=document.createElement("div");row.style.cssText="border:1px solid var(--line);border-radius:12px;padding:8px;margin:8px 0";
+    var top=document.createElement("label");top.style.cssText="display:flex;gap:8px;align-items:center;font-weight:700";
+    var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!sl.on;cb.addEventListener("change",function(){sl.on=cb.checked});
+    var rs=document.createElement("select");rts().forEach(function(r,i){var o=document.createElement("option");o.value=i;o.textContent=r.name;if(i===sl.r)o.selected=true;rs.appendChild(o)});rs.addEventListener("change",function(){sl.r=+rs.value});
+    top.appendChild(cb);top.appendChild(document.createTextNode("Nachricht für "));top.appendChild(rs);row.appendChild(top);
+    var t=document.createElement("div");t.style.cssText="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px";
+    t.appendChild(document.createTextNode("Senden um"));t.appendChild(timeIn(sl.h,sl.m,function(h,m){sl.h=h;sl.m=m}));
+    t.appendChild(document.createTextNode("Fahrt um"));t.appendChild(timeIn(sl.dh,sl.dm,function(h,m){sl.dh=h;sl.dm=m}));row.appendChild(t);
+    var dd=document.createElement("div");dd.style.cssText="display:flex;gap:4px;margin-top:6px";
+    ORDER.forEach(function(d){var x=document.createElement("button");x.type="button";x.textContent=DN2[d];x.style.cssText="min-height:34px;padding:2px 8px;flex:1";
+      function paint(){var on=sl.d.indexOf(d)>=0;x.style.background=on?"var(--accent)":"";x.style.color=on?"#fff":""}
+      x.addEventListener("click",function(){var i=sl.d.indexOf(d);if(i>=0)sl.d.splice(i,1);else sl.d.push(d);paint()});paint();dd.appendChild(x)});
+    row.appendChild(dd);box.appendChild(row);
+  });
+  var cl=document.createElement("label");cl.style.cssText="display:flex;gap:8px;align-items:center;margin:8px 0";
+  var cc=document.createElement("input");cc.type="checkbox";cc.checked=!!cfg.change;cc.addEventListener("change",function(){cfg.change=cc.checked});
+  cl.appendChild(cc);cl.appendChild(document.createTextNode("Zusätzlich melden, wenn sich die Lage ändert"));box.appendChild(cl);
+  var sv=document.createElement("button");sv.type="button";sv.className="go";sv.textContent="Speichern";
+  sv.addEventListener("click",function(){curSub().then(function(sb){return sb&&save(sb)}).then(function(j){say(j&&j.ok?"Gespeichert.":"Nicht gespeichert.");gkLog("Push","Einstellungen gespeichert")}).catch(function(e){say("Fehler: "+(e&&e.message||e))})});
+  var ts=document.createElement("button");ts.type="button";ts.textContent="Test-Nachricht senden";
+  ts.addEventListener("click",function(){curSub().then(function(sb){return sb&&post("/push/test",{endpoint:sb.endpoint})}).then(function(j){say(j&&j.ok?"Test gesendet. Es sollte gleich eine Nachricht kommen.":"Test fehlgeschlagen ("+(j&&j.status)+").");gkLog("Push","Test: "+JSON.stringify(j))}).catch(function(e){say("Fehler: "+(e&&e.message||e))})});
+  var off=document.createElement("button");off.type="button";off.textContent="Ausschalten";
+  off.addEventListener("click",function(){curSub().then(function(sb){if(!sb)return;return post("/push/unsub",{endpoint:sb.endpoint}).then(function(){return sb.unsubscribe()})}).then(function(){gkLog("Push","ausgeschaltet");curSub().then(render)}).catch(function(e){say("Fehler: "+(e&&e.message||e))})});
+  box.appendChild(sv);box.appendChild(ts);box.appendChild(off);
+}
+if(supported())curSub().then(render).catch(function(){render(null)});else render(null);
+})();
 $("rkIn").value=ls("gk_rk")?"Gespeichert":"";$("rkSt").textContent=ls("gk_rk")?"Schlüssel ist gespeichert.":"Noch kein Schlüssel gespeichert.";
 $("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0-9a-f]{16,64})\s*$/);if(!m){$("rkSt").textContent="Kein gültiger Schlüssel erkannt.";return}ls("gk_rk",m[1]);$("rkIn").value="Gespeichert";$("rkSt").textContent="Gespeichert. Tesla wird geladen …";if(window.loadTeslaDeferred)window.loadTeslaDeferred()});
 (function(){var m=location.hash.match(/rk=([0-9a-f]{16,64})/);if(m){ls("gk_rk",m[1]);history.replaceState(null,"",location.pathname+location.search)}})();

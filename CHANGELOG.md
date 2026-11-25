@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.34 – 25.11.2026
+- Benachrichtigungen (Push): morgens 5:00 Mo–Fr, 12:00 Mo/Di/Mi/Fr und Do 17:00 vor den Heimfahrten, dazu Meldung bei Änderung der Lage. Zeiten, Tage und Fahrt in den Optionen einstellbar, mit Test-Knopf.
+
 ## Version 1.33 – 25.11.2026
 - Wetterdaten und Strecke werden auf dem Gerät zwischengespeichert (40 Min.). Weniger Abrufe beim Wetterdienst, schnellerer Start, kein Hängen mehr, wenn der Dienst sein Stundenlimit erreicht hat.
 - Verständliche Meldung bei Stundenlimit des Wetterdienstes.
