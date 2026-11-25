@@ -113,7 +113,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 @keyframes flow{to{stroke-dashoffset:-20}}
 .alertico{font-size:20px;line-height:26px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
 .pin{background:none;border:0}
-#mini{box-shadow:inset 0 0 0 1px rgba(255,255,255,.25),0 6px 18px rgba(0,0,0,.25)}
+
 .carico{background:none;border:0;font-size:22px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
 .card{animation:rise .5s ease both}
 @keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -121,10 +121,29 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
 .greet{animation:rise .6s ease both}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+html{background:var(--bg)}
+body{padding:0;overflow:hidden}
+#minibox{position:fixed;inset:0;z-index:1}
+#minibox[hidden]{display:block;visibility:hidden}
+#mini{height:100%;width:100%;border-radius:0;box-shadow:none!important}
+#mapctl{position:fixed;right:12px;z-index:4;display:flex;flex-direction:column;gap:8px;bottom:calc(var(--vis,260px) + 12px);transition:bottom .3s}
+#mapctl button{width:46px;padding:0;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#sheet{position:fixed;left:0;right:0;bottom:0;height:92dvh;z-index:5;display:flex;flex-direction:column;background:var(--bg);border-radius:18px 18px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.25);transform:translateY(calc(92dvh - var(--vis,260px)));transition:transform .3s;max-width:640px;margin:0 auto}
+#sheet.drag{transition:none}
+#grip{flex:none;padding:10px 0 8px;touch-action:none;cursor:grab}
+#grip i{display:block;width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto}
+#sheetBody{flex:1;overflow-y:hidden;padding:0 14px calc(32px + env(safe-area-inset-bottom,0px))}
+#sheet.full #sheetBody{overflow-y:auto}
+.card{background:var(--card)}
+.greet{margin-top:0}
 </style>
 </head>
 <body>
-<canvas id="bg" aria-hidden="true"></canvas>
+<canvas id="bg" aria-hidden="true" hidden></canvas>
+<div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
+<div id="mapctl"><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
+<div id="sheet"><div id="grip" role="button" aria-label="Infos größer oder kleiner" tabindex="0"><i></i></div><div id="sheetBody">
 <main>
   <header>
     <h1>Glätte-Kieker <span class="ver" id="ver"></span></h1>
@@ -141,7 +160,6 @@ button.danger{color:var(--bad);border-color:var(--bad)}
   <section class="card" aria-label="Straßenstatus">
     <div class="banner l0" id="banner"><div class="dot" id="dot">…</div><div><b id="bt">Lade Strecke …</b><span id="bs"></span></div></div>
     <p class="rtlabel" id="rtlabel"></p>
-    <div id="minibox" class="mini-wrap" hidden><div id="mini" role="img" aria-label="Streckenübersicht"></div><div class="btnrow"><button type="button" class="dir" id="dirBtn">⇄ Richtung wechseln</button><button type="button" class="dir" id="satBtn">🛰️ Karte / Luftbild</button></div></div>
     <div class="slider" id="sliderBox" hidden style="margin-top:10px">
       <label for="hr" style="display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted)"><span>Abfahrt</span><b id="hl" style="color:var(--fg)"></b></label>
       <input type="range" id="hr" min="0" max="47" value="0" step="1">
@@ -168,13 +186,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
       <div id="outlook"></div>
     </section>
 
-    <!-- 3. Karte -->
-    <section class="card" aria-label="Karte">
-      <div id="map" role="img" aria-label="Streckenkarte"></div>
-      <div class="lg"><span><i style="background:var(--ok)"></i>unbedenklich</span><span><i style="background:var(--warn)"></i>Vorsicht</span><span><i style="background:var(--bad)"></i>Gefahr</span></div>
-    </section>
-
-  </div>
+</div>
 
   <!-- 4. Strecken und Orte -->
   <section class="card" aria-label="Strecken">
@@ -194,12 +206,31 @@ button.danger{color:var(--bad);border-color:var(--bad)}
   <div class="card"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+</div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function(){
+var sh=document.getElementById("sheet"),gr=document.getElementById("grip"),root=document.documentElement;
+function H(){return window.innerHeight*0.92}
+function snaps(){return [260,Math.round(window.innerHeight*0.55),Math.round(H())]}
+var idx=0;
+function set(i,px){idx=i;var v=px!=null?px:snaps()[i];root.style.setProperty("--vis",v+"px");sh.classList.toggle("full",i===2&&px==null);window.gkVis=v}
+window.gkSheet=set;set(0);
+var y0,v0,drag=false,moved=false;
+gr.addEventListener("pointerdown",function(e){drag=true;moved=false;y0=e.clientY;v0=window.gkVis;sh.classList.add("drag");gr.setPointerCapture(e.pointerId)});
+gr.addEventListener("pointermove",function(e){if(!drag)return;var d=y0-e.clientY;if(Math.abs(d)>4)moved=true;var v=Math.max(120,Math.min(H(),v0+d));root.style.setProperty("--vis",v+"px");window.gkVis=v});
+function end(){if(!drag)return;drag=false;sh.classList.remove("drag");var s=snaps();
+ if(!moved){set((idx+1)%3);}else{var b=0;s.forEach(function(x,i){if(Math.abs(x-window.gkVis)<Math.abs(s[b]-window.gkVis))b=i});set(b)}
+ if(window.gkMap)setTimeout(function(){window.gkMap.invalidateSize()},320)}
+gr.addEventListener("pointerup",end);gr.addEventListener("pointercancel",end);
+gr.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){set((idx+1)%3);e.preventDefault()}});
+})();
+</script>
+<script>
+(function(){
 "use strict";
-var VERSION="1.20",VDATE="25.11.2026";
+var VERSION="1.21",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -598,6 +629,7 @@ function drawWx(){
   $("hoursNote").textContent="Stundenwerte am Startort ab Abfahrt (Temperatur, Niederschlag in mm).";
 }
 function drawMap(){
+  if(!$("map"))return;
   if(typeof L==="undefined"){$("map").textContent="Karte nicht verfügbar (offline).";return}
   var latlngs=[];
   if(!map){
@@ -759,10 +791,13 @@ function startCar(path,m){
   }
   carRaf=requestAnimationFrame(step);
 }
+var lastAll=null;
+function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,60],paddingBottomRight:[30,(window.gkVis||260)+30]})}
+$("locBtn").addEventListener("click",function(){fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
   show("minibox",true);
-  if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false,dragging:false,scrollWheelZoom:false,touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false});L.control.attribution({prefix:false,position:"bottomright"}).addTo(mini)}
+  if(!mini){mini=L.map("mini",{zoomControl:false,attributionControl:false});window.gkMap=mini;L.control.attribution({prefix:false,position:"bottomright"}).addTo(mini)}
   var old=[];mini.eachLayer(function(x){old.push(x)});old.forEach(function(x){mini.removeLayer(x)});
   tiles(ls("gk_sat")==="1").addTo(mini);
   var all=[];
@@ -782,8 +817,9 @@ function drawMini(){
   var o=S.flip?S.B:S.A,pa=all.length>1?(S.flip?all[all.length-1]:all[0]):null,pb=S.flip?all[all.length-2]:all[1];
   var deg=pa&&pb?bearing(pa,pb):90;
   var carM=L.marker([o.lat,o.lon],{icon:carIcon(deg-90),zIndexOffset:1000}).addTo(mini);
+  lastAll=all;
   startCar(S.flip?all.slice().reverse():all,carM);
-  mini.invalidateSize();mini.fitBounds(L.polyline(all).getBounds(),{padding:[22,22]});
+  mini.invalidateSize();fitRoute();
 }
 $("satBtn").addEventListener("click",function(){ls("gk_sat",ls("gk_sat")==="1"?"0":"1");drawMini()});
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});

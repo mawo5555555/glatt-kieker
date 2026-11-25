@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.21 – 25.11.2026
+- Karte im Mittelpunkt: Vollbild-Karte (verschiebbar, zoombar), Infos in einem Bottom-Sheet mit drei Stufen (klein, mittel, groß). Knöpfe für Richtung, Luftbild und Strecke zentrieren schweben über dem Sheet.
+
 ## Version 1.20 – 25.11.2026
 - Das Tesla fährt die Strecke auf der Mini-Karte ab (Schleife, in Fahrtrichtung). Bei „Bewegung reduzieren“ steht es still.
 
