@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.40 – 25.11.2026
+- Tesla koppeln: Code im Tesla anzeigen, am iPhone eingeben, Schlüssel wird automatisch übertragen.
+
 ## Version 1.39 – 25.11.2026
 - Kacheln verständlicher: „Niederschlag" (Wert „keiner" statt „trocken"), „Frost in 6 Std." mit tiefster Temperatur, z. B. „nein (3°)".
 

@@ -268,6 +268,7 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Tesla koppeln"><h2 class="sec">Tesla koppeln</h2><p class="note">Im Tesla: „Code anzeigen“ tippen. Am iPhone den Code unten eingeben, dann hat der Tesla den Schlüssel ohne Tippen.</p><button type="button" id="pairShow">Code anzeigen (im Tesla)</button><p id="pairCode" style="font-size:2rem;font-weight:700;letter-spacing:.2em;margin:8px 0"></p><input id="pairIn" inputmode="numeric" maxlength="6" placeholder="Code vom Tesla" style="width:100%"><button type="button" id="pairSend">Tesla koppeln (am iPhone)</button><p class="note" id="pairSt"></p></section>
 <section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p></section>
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
@@ -300,7 +301,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.39",VDATE="25.11.2026";
+var VERSION="1.40",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -791,6 +792,34 @@ b.value=l.slice().reverse().map(function(x){var d=new Date(x[0]);return d.toLoca
 $("logCopy").addEventListener("click",function(){var b=$("logBox");b.select();try{navigator.clipboard.writeText(b.value)}catch(e){document.execCommand("copy")}});
 $("logClear").addEventListener("click",function(){ls("gk_log","[]");window.gkLogRender()});
 window.gkLogRender();gkLog("Info","App gestartet, "+(navigator.onLine?"online":"offline"));
+(function(){
+var sh=$("pairShow");if(!sh)return;
+function st(t){$("pairSt").textContent=t}
+var tm=null,until=0;
+sh.addEventListener("click",function(){
+  st("Code wird geholt …");
+  fetch(repUrl()+"/pair/new",{method:"POST"}).then(function(r){return r.json()}).then(function(j){
+    if(!j.code)throw new Error("kein Code");
+    $("pairCode").textContent=j.code;st("Gib diesen Code am iPhone ein (gilt 10 Minuten).");gkLog("Info","Kopplung gestartet");
+    until=Date.now()+10*60e3;if(tm)clearInterval(tm);
+    tm=setInterval(function(){
+      if(Date.now()>until){clearInterval(tm);st("Code abgelaufen. Bitte neu anzeigen.");$("pairCode").textContent="";return}
+      fetch(repUrl()+"/pair/get?code="+j.code).then(function(r){return r.json()}).then(function(x){
+        if(x.k){clearInterval(tm);ls("gk_rk",x.k);$("pairCode").textContent="";st("Gekoppelt. Tesla wird geladen …");gkLog("Info","Kopplung erfolgreich");if(window.loadTeslaDeferred)window.loadTeslaDeferred()}
+      }).catch(function(){});
+    },3000);
+  }).catch(function(e){st("Fehler: "+(e&&e.message||e));gkLog("Fehler","Kopplung: "+(e&&e.message||e))});
+});
+$("pairSend").addEventListener("click",function(){
+  var c=$("pairIn").value.replace(/\D/g,""),k=ls("gk_rk");
+  if(c.length!==6){st("Bitte den 6-stelligen Code eingeben.");return}
+  if(!k){st("Dieses Gerät hat selbst noch keinen Schlüssel.");return}
+  st("Wird gesendet …");
+  fetch(repUrl()+"/pair/send",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({code:c,k:k})}).then(function(r){return r.json()}).then(function(j){
+    if(j.ok){st("Fertig. Der Tesla sollte gleich die Daten laden.");$("pairIn").value="";gkLog("Info","Kopplung gesendet")}else{st("Nicht gekoppelt: "+(j.error||"Fehler"));gkLog("Fehler","Kopplung: "+(j.error||"?"))}
+  }).catch(function(e){st("Fehler: "+(e&&e.message||e))});
+});
+})();
 (function(){
 var sel=$("darkMap"),nt=$("darkNote");if(!sel)return;
 var v=ls("gk_dark");if(v!=="1"&&v!=="0")v="auto";
