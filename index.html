@@ -70,14 +70,38 @@ summary::-webkit-details-marker{display:none}
 .disc{border-color:var(--warn)}
 [hidden]{display:none!important}
 .spin{color:var(--muted);font-size:.9rem;padding:8px 0}
+
+h2.sec{font-size:1rem;margin:0 0 8px}
+.top{display:flex;flex-direction:column;gap:10px}
+.rtlabel{font-size:.85rem;color:var(--muted);margin:2px 0 0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tabs button{min-height:40px;padding:6px 12px;font-size:.88rem}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.autorow{display:flex;align-items:center;gap:8px;font-size:.88rem;color:var(--muted);margin-top:8px}
+.autorow input{width:22px;height:22px;accent-color:var(--accent)}
+.place{display:flex;gap:8px;align-items:center;margin:4px 0}
+.place .pn{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.place small{color:var(--muted);font-weight:400}
+.res{list-style:none;margin:6px 0 0;padding:0;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.res li{border-top:1px solid var(--line);padding:0}
+.res li:first-child{border-top:0}
+.res button{display:block;width:100%;text-align:left;border:0;border-radius:0;background:var(--card);padding:10px 12px;min-height:48px}
+.res small{display:block;color:var(--muted);font-size:.78rem}
+.res a{font-size:.78rem;color:var(--accent)}
+.hrs{display:flex;gap:8px;align-items:center;margin:6px 0;font-size:.9rem}
+.hrs select{font:inherit;font-size:16px;min-height:42px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:4px 8px}
+.ed{border-top:1px solid var(--line);padding:10px 0 4px}
+.ed:first-child{border-top:0}
+.btnrow{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.btnrow button{flex:1;min-width:120px}
+button.danger{color:var(--bad);border-color:var(--bad)}
 </style>
 </head>
 <body>
 <canvas id="bg" aria-hidden="true"></canvas>
 <main>
   <header>
-    <h1>Glatt-Kieker <span class="ver" id="ver">Version 1.0</span></h1>
-    <p class="sub">Glätte- und Wetterschätzung für deine Strecke</p>
+    <h1>Glatt-Kieker <span class="ver" id="ver"></span></h1>
   </header>
 
   <div class="card disc" id="disc" hidden>
@@ -86,51 +110,54 @@ summary::-webkit-details-marker{display:none}
     <button class="go" id="ack">Verstanden</button>
   </div>
 
-  <form class="card" id="form" autocomplete="off">
-    <div class="row">
-      <div><label class="f" for="from">Start</label><input type="text" id="from" value="Sonnenberg, Oberhavel" enterkeyhint="next"></div>
-      <button type="button" id="swap" title="Start und Ziel tauschen" aria-label="Start und Ziel tauschen">⇄</button>
+  <!-- 1. Straßenstatus -->
+  <section class="card" aria-label="Straßenstatus">
+    <div class="banner l0" id="banner"><div class="dot" id="dot">…</div><div><b id="bt">Lade Strecke …</b><span id="bs"></span></div></div>
+    <p class="rtlabel" id="rtlabel"></p>
+    <div class="tabs" id="tabs" role="group" aria-label="Strecke wählen"></div>
+    <div class="slider" id="sliderBox" hidden style="margin-top:10px">
+      <label for="hr" style="display:flex;justify-content:space-between;font-size:.9rem;color:var(--muted)"><span>Abfahrt</span><b id="hl" style="color:var(--fg)"></b></label>
+      <input type="range" id="hr" min="0" max="47" value="0" step="1">
+      <div class="strip" id="strip" aria-hidden="true"></div>
     </div>
-    <div style="margin-top:8px"><label class="f" for="to">Ziel</label><input type="text" id="to" value="Oranienburg" enterkeyhint="go"></div>
-    <button class="go" type="submit" id="goBtn">Strecke prüfen</button>
-    <div class="chips">
-      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Oranienburg">Sonnenberg → Oranienburg</button>
-      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Hamburg">→ Hamburg</button>
-      <button type="button" class="sm" data-a="Sonnenberg, Oberhavel" data-b="Berlin">→ Berlin</button>
-    </div>
-  </form>
+    <div id="status" class="spin" hidden></div>
+    <div id="error" class="err" hidden style="margin-top:8px"></div>
+  </section>
 
-  <div id="status" class="spin" hidden></div>
-  <div id="error" class="err" hidden></div>
+  <div id="result" hidden style="display:contents">
+    <!-- 2. Wetter -->
+    <section class="card" aria-label="Wetter">
+      <h2 class="sec">Wetter auf einen Blick</h2>
+      <div class="wx" id="wx"></div>
+      <div class="hours" id="hours"></div>
+      <p class="note" id="hoursNote"></p>
+    </section>
 
-  <div id="result" hidden>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div class="banner l0" id="banner"><div class="dot" id="dot">✓</div><div><b id="bt"></b><span id="bs"></span></div></div>
+    <!-- 3. Karte -->
+    <section class="card" aria-label="Karte">
+      <div id="map" role="img" aria-label="Streckenkarte"></div>
+      <div class="lg"><span><i style="background:var(--ok)"></i>unbedenklich</span><span><i style="background:var(--warn)"></i>Vorsicht</span><span><i style="background:var(--bad)"></i>Gefahr</span></div>
+    </section>
 
-      <div class="card slider">
-        <label for="hr"><span>Abfahrt</span><b id="hl"></b></label>
-        <input type="range" id="hr" min="0" max="47" value="0" step="1">
-        <div class="strip" id="strip" aria-hidden="true"></div>
-        <p class="note" style="margin-top:6px">Farbband: schlechteste Stufe der Strecke je Abfahrtsstunde. Die Fahrzeit wird je Abschnitt berücksichtigt.</p>
-      </div>
-
-      <div class="card">
-        <h2>Wetter auf einen Blick</h2>
-        <div class="wx" id="wx"></div>
-        <div class="hours" id="hours"></div>
-        <p class="note" id="hoursNote"></p>
-      </div>
-
-      <div class="card">
-        <div id="map" role="img" aria-label="Streckenkarte"></div>
-        <div class="lg"><span><i style="background:var(--ok)"></i>unbedenklich</span><span><i style="background:var(--warn)"></i>Vorsicht</span><span><i style="background:var(--bad)"></i>Gefahr</span></div>
-      </div>
-
-      <div class="card"><h2 id="listH">Abschnitte</h2><ul id="list"></ul></div>
-    </div>
+    <section class="card"><h2 class="sec" id="listH">Abschnitte</h2><ul id="list"></ul></section>
   </div>
 
-  <div class="card"><h2>Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
+  <!-- 4. Strecken und Orte -->
+  <section class="card" aria-label="Strecken">
+    <h2 class="sec">Meine Strecken und Zeitplan</h2>
+    <p class="note">Die App wählt die Strecke nach der Uhrzeit selbst. Prüfe unter „Start ändern“, ob das richtige Ortsschild gewählt ist.</p>
+    <div class="autorow"><input type="checkbox" id="auto" checked><label for="auto">Strecke automatisch nach Uhrzeit wählen</label></div>
+    <div id="routes" style="margin-top:6px"></div>
+    <div class="btnrow"><button type="button" id="addRoute">+ Strecke hinzufügen</button></div>
+  </section>
+
+  <section class="card" aria-label="Einmalige Strecke">
+    <h2 class="sec">Einmalige Strecke prüfen</h2>
+    <p class="note">Zum Beispiel für eine Fahrt nach Hamburg. Sie wird nicht gespeichert.</p>
+    <div id="adhoc"></div>
+  </section>
+
+  <div class="card"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL) · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
 
@@ -138,18 +165,24 @@ summary::-webkit-details-marker{display:none}
 <script>
 (function(){
 "use strict";
-var VERSION="1.0",VDATE="25.11.2026";
+var VERSION="1.1",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-var S=null, hour=0, map=null, layer=null;
+function el(tag,attrs,kids){
+  var e=document.createElement(tag),k;
+  for(k in (attrs||{})){if(k==="text")e.textContent=attrs[k];else if(k==="class")e.className=attrs[k];else if(k.slice(0,2)==="on")e.addEventListener(k.slice(2),attrs[k]);else e.setAttribute(k,attrs[k])}
+  (kids||[]).forEach(function(c){if(c)e.appendChild(c)});return e;
+}
+var S=null,hour=0,map=null,layer=null,busy=false;
+var routes=[],active=-1,auto=true,adhocRoute=null;
 
 /* ---------- Hilfen ---------- */
 function hav(a,b){var R=6371000,p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dp=p2-p1,dl=(b[0]-a[0])*Math.PI/180;
   var x=Math.sin(dp/2)*Math.sin(dp/2)+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)*Math.sin(dl/2);return 2*R*Math.asin(Math.sqrt(x))}
 function dayTime(t){var d=new Date(t),w=["So","Mo","Di","Mi","Do","Fr","Sa"][d.getDay()];return w+" "+String(d.getHours()).padStart(2,"0")+":00"}
-function berlinNowKey(){return new Date().toLocaleString("sv-SE",{timeZone:"Europe/Berlin"}).slice(0,13).replace(" ","T")+":00"}
+function berlinParts(){var p=new Date().toLocaleString("sv-SE",{timeZone:"Europe/Berlin"});return {key:p.slice(0,13).replace(" ","T")+":00",h:+p.slice(11,13)}}
 function wmo(c){
   var m={0:["☀️","klar"],1:["🌤️","überwiegend klar"],2:["⛅","wolkig"],3:["☁️","bedeckt"],45:["🌫️","Nebel"],48:["🌫️","Reifnebel"],
   51:["🌦️","leichter Niesel"],53:["🌦️","Niesel"],55:["🌦️","starker Niesel"],56:["🧊","gefrierender Niesel"],57:["🧊","gefrierender Niesel"],
@@ -165,15 +198,129 @@ function fetchJson(url,ms){
   var c=new AbortController(),to=setTimeout(function(){c.abort()},ms||25000);
   return fetch(url,{signal:c.signal}).then(function(r){clearTimeout(to);if(!r.ok)throw new Error("HTTP "+r.status);return r.json()});
 }
+function fmtMin(m){m=Math.round(m);return m<60?m+" Min.":Math.floor(m/60)+" Std. "+String(m%60).padStart(2,"0")+" Min."}
 
-/* ---------- Orte und Route ---------- */
-function geocode(q){
-  var u="https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=de&accept-language=de&q="+encodeURIComponent(q);
+/* ---------- Ortssuche mit Auswahl ---------- */
+function search(q){
+  var u="https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=8&countrycodes=de&accept-language=de&q="+encodeURIComponent(q);
   return fetchJson(u).then(function(a){
-    if(!a.length)throw new Error("Ort nicht gefunden: "+q);
-    return {lat:+a[0].lat,lon:+a[0].lon,name:a[0].display_name.split(",")[0]};
+    var seen={},out=[];
+    a.forEach(function(r){
+      var ad=r.address||{},sub=[ad.village||ad.town||ad.city||ad.hamlet||ad.suburb,ad.county,ad.state].filter(Boolean).filter(function(x,i,arr){return arr.indexOf(x)===i}),
+          nm=r.name||(r.display_name||"").split(",")[0], key=nm+"|"+r.lat.slice(0,6)+"|"+r.lon.slice(0,6);
+      if(seen[key])return;seen[key]=1;
+      out.push({n:nm,lat:+r.lat,lon:+r.lon,sub:sub.join(", "),plz:ad.postcode||"",typ:r.type||""});
+    });
+    return out;
   });
 }
+// Ein Ortsfeld: zeigt den gewählten Ort, "Ändern" öffnet Suche mit Trefferliste
+function placeField(label,place,onPick){
+  var box=el("div"),line=el("div",{class:"place"}),nm=el("span",{class:"pn"}),sBox=el("div",{hidden:""});
+  function shown(){nm.innerHTML="";nm.appendChild(document.createTextNode(label+": "+(place?place.n:"—")));
+    if(place&&place.sub){var sm=el("small",{text:" · "+place.sub});nm.appendChild(sm)}}
+  shown();
+  var chg=el("button",{type:"button",class:"sm",text:"Ändern"});
+  chg.addEventListener("click",function(){sBox.hidden=!sBox.hidden;if(!sBox.hidden)inp.focus()});
+  var inp=el("input",{type:"text",placeholder:"Ort oder Adresse suchen",enterkeyhint:"search"});
+  var go=el("button",{type:"button",class:"sm",text:"Suchen"}),res=el("ul",{class:"res",hidden:""}),msg=el("p",{class:"note"});
+  function doSearch(){
+    var q=inp.value.trim();if(!q)return;msg.textContent="Suche …";res.hidden=true;res.innerHTML="";
+    search(q).then(function(list){
+      msg.textContent=list.length?list.length+" Treffer, bitte wählen:":"Nichts gefunden.";
+      list.forEach(function(p){
+        var b=el("button",{type:"button"});b.appendChild(document.createTextNode(p.n+(p.plz?" ("+p.plz+")":"")));
+        b.appendChild(el("small",{text:(p.sub||"Deutschland")+" · "+p.lat.toFixed(3)+" N, "+p.lon.toFixed(3)+" O"}));
+        b.addEventListener("click",function(){place=p;shown();sBox.hidden=true;res.hidden=true;res.innerHTML="";msg.textContent="";inp.value="";onPick(p)});
+        var lk=el("a",{href:"https://www.openstreetmap.org/?mlat="+p.lat+"&mlon="+p.lon+"#map=13/"+p.lat+"/"+p.lon,target:"_blank",rel:"noopener",text:"Auf Karte ansehen"});
+        var li=el("li");li.appendChild(b);var w=el("div",{style:"padding:0 12px 8px;background:var(--card)"});w.appendChild(lk);li.appendChild(w);res.appendChild(li);
+      });
+      res.hidden=!list.length;
+    }).catch(function(){msg.textContent="Suche fehlgeschlagen. Bitte später erneut versuchen."});
+  }
+  go.addEventListener("click",doSearch);
+  inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();doSearch()}});
+  line.appendChild(nm);line.appendChild(chg);
+  var row=el("div",{class:"row",style:"align-items:center"});row.appendChild(el("div",{},[inp]));row.appendChild(go);
+  sBox.appendChild(row);sBox.appendChild(msg);sBox.appendChild(res);
+  box.appendChild(line);box.appendChild(sBox);
+  box.getPlace=function(){return place};
+  return box;
+}
+
+/* ---------- Strecken (Zeitplan) ---------- */
+var SONNEN={n:"Sonnenberg",lat:53.0102,lon:13.0489,sub:"Gransee und Gemeinden, Oberhavel"},ORAN={n:"Oranienburg",lat:52.7539,lon:13.2493,sub:"Oberhavel"};
+function defaults(){return [
+  {name:"Hinweg",from:SONNEN,to:ORAN,h0:0,h1:10},
+  {name:"Rückweg",from:ORAN,to:SONNEN,h0:10,h1:24}];}
+function loadRoutes(){
+  try{var r=JSON.parse(ls("gk_routes")||"null");if(r&&r.length)routes=r}catch(e){}
+  if(!routes.length)routes=defaults();
+  var a=ls("gk_auto");auto=a===null?true:a==="1";
+}
+function saveRoutes(){ls("gk_routes",JSON.stringify(routes));ls("gk_auto",auto?"1":"0")}
+function pick(h){
+  for(var i=0;i<routes.length;i++){var r=routes[i];if(h>=r.h0&&h<r.h1)return i}
+  return 0;
+}
+function hrsText(r){return String(r.h0).padStart(2,"0")+"–"+String(r.h1).padStart(2,"0")+" Uhr"}
+function renderTabs(){
+  var t=$("tabs");t.innerHTML="";
+  routes.forEach(function(r,i){
+    var b=el("button",{type:"button","aria-pressed":String(i===active&&!adhocRoute),text:r.name+": "+r.from.n+" → "+r.to.n});
+    b.addEventListener("click",function(){auto=false;$("auto").checked=false;saveRoutes();selectRoute(i)});
+    t.appendChild(b);
+  });
+}
+function renderRoutes(){
+  var box=$("routes");box.innerHTML="";
+  routes.forEach(function(r,i){
+    var d=el("details",{class:"ed"}),sm=el("summary",{});
+    sm.appendChild(el("span",{class:"nm",text:r.name+": "+r.from.n+" → "+r.to.n}));sm.appendChild(el("span",{class:"km",text:hrsText(r)}));
+    d.appendChild(sm);
+    var nameIn=el("input",{type:"text",value:r.name,"aria-label":"Name der Strecke"});
+    var f=placeField("Start",r.from,function(p){r.from=p}),t=placeField("Ziel",r.to,function(p){r.to=p});
+    var s0=hourSel(r.h0,0,23),s1=hourSel(r.h1,1,24);
+    var hr=el("div",{class:"hrs"},[el("span",{text:"Gilt von"}),s0,el("span",{text:"bis"}),s1,el("span",{text:"Uhr"})]);
+    var sv=el("button",{type:"button",class:"go",text:"Speichern",style:"margin:0"}),dl=el("button",{type:"button",class:"danger",text:"Löschen"});
+    sv.addEventListener("click",function(){
+      r.name=nameIn.value.trim()||"Strecke";r.h0=+s0.value;r.h1=+s1.value;
+      if(r.h1<=r.h0){r.h1=Math.min(24,r.h0+1)}
+      saveRoutes();renderRoutes();applyAuto(true);
+    });
+    dl.addEventListener("click",function(){if(routes.length<2)return;routes.splice(i,1);saveRoutes();renderRoutes();active=-1;applyAuto(true)});
+    d.appendChild(el("div",{style:"margin-top:8px"},[el("label",{class:"f",text:"Name"}),nameIn]));
+    d.appendChild(f);d.appendChild(t);d.appendChild(hr);
+    d.appendChild(el("div",{class:"btnrow"},[sv,dl]));
+    box.appendChild(d);
+  });
+}
+function hourSel(v,a,b){var s=el("select");for(var i=a;i<=b;i++){var o=el("option",{value:i,text:String(i).padStart(2,"0")});if(i===v)o.selected=true;s.appendChild(o)}return s}
+function addRoute(){
+  var last=routes[routes.length-1]||defaults()[0];
+  routes.push({name:"Strecke "+(routes.length+1),from:last.from,to:last.to,h0:0,h1:24});
+  saveRoutes();renderRoutes();var ds=document.querySelectorAll("#routes details");if(ds.length)ds[ds.length-1].open=true;
+}
+function renderAdhoc(){
+  var box=$("adhoc");box.innerHTML="";
+  var a=placeField("Start",SONNEN,function(){}),b=placeField("Ziel",null,function(){});
+  var go=el("button",{type:"button",class:"go",text:"Diese Strecke prüfen"});
+  go.addEventListener("click",function(){
+    var p=a.getPlace(),q=b.getPlace();
+    if(!p||!q){setError("Bitte Start und Ziel über „Ändern“ und „Suchen“ wählen.");return}
+    adhocRoute={name:"Einmalige Strecke",from:p,to:q};auto=false;$("auto").checked=false;saveRoutes();
+    window.scrollTo({top:0,behavior:"smooth"});run(adhocRoute);renderTabs();
+  });
+  box.appendChild(a);box.appendChild(b);box.appendChild(go);
+}
+function selectRoute(i){adhocRoute=null;active=i;renderTabs();run(routes[i])}
+function applyAuto(force){
+  if(!auto){if(active<0)selectRoute(pick(berlinParts().h));return}
+  var i=pick(berlinParts().h);
+  if(force||i!==active||adhocRoute)selectRoute(i);
+}
+
+/* ---------- Routing und Wetter ---------- */
 function route(a,b){
   var u="https://router.project-osrm.org/route/v1/driving/"+a.lon+","+a.lat+";"+b.lon+","+b.lat+"?overview=full&geometries=geojson&steps=false";
   return fetchJson(u,40000).then(function(d){
@@ -187,10 +334,8 @@ function split(coords,segM){
   if(cur.length>1){if(segs.length&&acc<segM/2){var l=segs[segs.length-1];l.pts=l.pts.concat(cur.slice(1));l.m+=acc}else segs.push({pts:cur,m:acc})}
   return segs;
 }
-
-/* ---------- Wetter ---------- */
 function fetchWeather(cells){
-  var out=[],chunks=[];
+  var chunks=[];
   for(var i=0;i<cells.length;i+=40)chunks.push(cells.slice(i,i+40));
   return Promise.all(chunks.map(function(ch){
     var u="https://api.open-meteo.com/v1/forecast?latitude="+ch.map(function(c){return c.lat.toFixed(3)}).join(",")+
@@ -224,19 +369,18 @@ function rate(h,i){
   return best;
 }
 
-/* ---------- Hauptablauf ---------- */
-function run(){
-  var q1=$("from").value.trim(),q2=$("to").value.trim();
-  if(!q1||!q2){setError("Bitte Start und Ziel eingeben.");return}
-  setError("");show("result",false);$("goBtn").disabled=true;
-  var A,B,R;
-  setStatus("Orte werden gesucht …");
-  geocode(q1).then(function(a){A=a;return new Promise(function(r){setTimeout(r,1100)})})
-  .then(function(){return geocode(q2)}).then(function(b){B=b;setStatus("Route wird berechnet …");return route(A,B)})
-  .then(function(r){R=r;setStatus("Wetterdaten werden geladen …");
+var runId=0;
+function run(rt){
+  var id=++runId;
+  setError("");$("rtlabel").textContent=rt.name+": "+rt.from.n+" → "+rt.to.n+(rt===adhocRoute?" (einmalig)":(auto?" · automatisch, gilt "+hrsText(rt):""));
+  setStatus("Route wird berechnet …");show("sliderBox",false);
+  var A=rt.from,B=rt.to,R;
+  route(A,B).then(function(r){
+    if(id!==runId)throw new Error("__skip");
+    R=r;setStatus("Wetterdaten werden geladen …");
     var coords=R.geometry.coordinates,km=R.distance/1000;
-    var segM=Math.max(2000,R.distance/90), segs=split(coords,segM);
-    var scale=Math.max(1,km/120), cl=0.018*scale, co=0.0295*scale, cells=[], idx={};
+    var segs=split(coords,Math.max(2000,R.distance/90));
+    var scale=Math.max(1,km/120),cl=0.018*scale,co=0.0295*scale,cells=[],idx={};
     segs.forEach(function(s){
       var m=s.pts[Math.floor(s.pts.length/2)],k=Math.round(m[1]/cl)+"_"+Math.round(m[0]/co);
       if(!(k in idx)){idx[k]=cells.length;cells.push({lat:Math.round(m[1]/cl)*cl,lon:Math.round(m[0]/co)*co})}
@@ -244,52 +388,49 @@ function run(){
     });
     return fetchWeather(cells).then(function(w){return {A:A,B:B,R:R,segs:segs,cells:cells,w:w,km:km}});
   }).then(function(d){
-    var times=d.w[0].hourly.time,now=berlinNowKey(),start=0;
+    if(id!==runId)throw new Error("__skip");
+    var times=d.w[0].hourly.time,now=berlinParts().key,start=0;
     for(var i=0;i<times.length;i++){if(times[i]>=now){start=i;break}}
     var n=Math.min(48,times.length-start-8);if(n<12)n=Math.min(12,times.length-start);
     var cum=0,tot=d.R.distance;
     d.segs.forEach(function(s){s.midFrac=(cum+s.m/2)/tot;cum+=s.m});
     d.start=start;d.n=n;d.times=times;d.durMin=d.R.duration/60;
-    // Bewertung je Abfahrtsstunde und Abschnitt (mit Fahrzeit-Versatz)
     d.segs.forEach(function(s){
       s.lv=[];s.why=[];var h=d.w[s.cell].hourly;
       for(var k=0;k<n;k++){
-        var off=Math.round(s.midFrac*d.durMin/60),idx=Math.min(times.length-1,start+k+off),r=rate(h,idx);
+        var off=Math.round(s.midFrac*d.durMin/60),ix=Math.min(times.length-1,start+k+off),r=rate(h,ix);
         s.lv.push(r[0]);s.why.push(r[1]);
       }
     });
     S=d;hour=0;$("hr").max=n-1;$("hr").value=0;
-    ls("gk_from",q1);ls("gk_to",q2);
-    setStatus("");show("result",true);drawAll();
+    setStatus("");show("sliderBox",true);show("result",true);drawAll();
   }).catch(function(e){
+    if(e&&e.message==="__skip")return;
     setStatus("");
     setError(e&&e.name==="AbortError"?"Zeitüberschreitung. Bitte später erneut versuchen.":(e&&e.message?e.message:"Fehler beim Laden."));
-  }).then(function(){$("goBtn").disabled=false});
+  });
 }
 
 function worst(i){var m=0;S.segs.forEach(function(s){if(s.lv[i]>m)m=s.lv[i]});return m}
-
 function drawAll(){
   var i=hour,w=worst(i),bad=S.segs.filter(function(s){return s.lv[i]>0}).length;
   $("banner").className="banner l"+w;$("dot").textContent=SYM[w];
   $("bt").textContent=w===0?"Keine Glätte erwartet":(w===1?"Vorsicht auf Teilen der Strecke":"Glättegefahr auf der Strecke");
-  $("bs").textContent=(w===0?"Alle "+S.segs.length+" Abschnitte unauffällig":bad+" von "+S.segs.length+" Abschnitten betroffen")+
-    " · "+S.A.name+" → "+S.B.name+", "+S.km.toFixed(0)+" km, ca. "+fmtMin(S.durMin);
+  $("bs").textContent=(w===0?"Alle "+S.segs.length+" Abschnitte unauffällig":bad+" von "+S.segs.length+" Abschnitten betroffen")+" · "+S.km.toFixed(0)+" km, ca. "+fmtMin(S.durMin);
   $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
   var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
   drawWx();drawMap();drawList();
 }
-function fmtMin(m){m=Math.round(m);return m<60?m+" Min.":Math.floor(m/60)+" Std. "+String(m%60).padStart(2,"0")+" Min."}
-
 function wxBox(name,h,idx){
   var c=g(h,"weather_code",idx,0),t=g(h,"temperature_2m",idx,0),wd=g(h,"wind_speed_10m",idx,0),p=g(h,"precipitation",idx,0),ic=wmo(c);
   return '<div class="c"><small>'+name+'</small><div class="t">'+ic[0]+" "+Math.round(t)+'°</div><small>'+ic[1]+' · Wind '+Math.round(wd*3.6)+' km/h'+(p>0?' · '+p.toFixed(1).replace(".",",")+' mm':'')+'</small></div>';
 }
+function esc(s){return String(s).replace(/[&<>]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]})}
 function drawWx(){
   var i=S.start+hour,hs=S.w[S.segs[0].cell].hourly,he=S.w[S.segs[S.segs.length-1].cell].hourly;
   var arr=Math.min(S.times.length-1,i+Math.round(S.durMin/60));
-  $("wx").innerHTML=wxBox("Start · "+S.A.name,hs,i)+wxBox("Ziel · "+S.B.name+" (Ankunft)",he,arr);
+  $("wx").innerHTML=wxBox("Start · "+esc(S.A.n),hs,i)+wxBox("Ziel · "+esc(S.B.n)+" (Ankunft)",he,arr);
   var h="";
   for(var k=0;k<24&&i+k<S.times.length;k++){
     var c=wmo(g(hs,"weather_code",i+k,0)),t=g(hs,"temperature_2m",i+k,0),p=g(hs,"precipitation",i+k,0);
@@ -298,12 +439,11 @@ function drawWx(){
   $("hours").innerHTML=h;
   $("hoursNote").textContent="Stundenwerte am Startort ab Abfahrt (Temperatur, Niederschlag in mm).";
 }
-
 function drawMap(){
-  var latlngs=[];
   if(typeof L==="undefined"){$("map").textContent="Karte nicht verfügbar (offline).";return}
+  var latlngs=[];
   if(!map){
-    map=L.map("map",{zoomControl:true,attributionControl:true});
+    map=L.map("map");
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap-Mitwirkende"}).addTo(map);
     layer=L.layerGroup().addTo(map);
   }
@@ -312,15 +452,13 @@ function drawMap(){
     var ll=s.pts.map(function(p){return [p[1],p[0]]});latlngs=latlngs.concat(ll);
     L.polyline(ll,{color:COL[s.lv[hour]],weight:6,opacity:.95,lineCap:"round"}).addTo(layer);
   });
-  L.circleMarker([S.A.lat,S.A.lon],{radius:7,color:"#14212b",fillColor:"#fff",fillOpacity:1,weight:3}).bindTooltip(S.A.name).addTo(layer);
-  L.circleMarker([S.B.lat,S.B.lon],{radius:7,color:"#fff",fillColor:"#14212b",fillOpacity:1,weight:3}).bindTooltip(S.B.name).addTo(layer);
-  map.invalidateSize();map.fitBounds(L.latLngBounds(latlngs),{padding:[16,16]});
+  L.circleMarker([S.A.lat,S.A.lon],{radius:7,color:"#14212b",fillColor:"#fff",fillOpacity:1,weight:3}).bindTooltip(S.A.n).addTo(layer);
+  L.circleMarker([S.B.lat,S.B.lon],{radius:7,color:"#fff",fillColor:"#14212b",fillOpacity:1,weight:3}).bindTooltip(S.B.n).addTo(layer);
+  map.invalidateSize();
+  if(S!==drawMap.last){map.fitBounds(L.latLngBounds(latlngs),{padding:[16,16]});drawMap.last=S}
 }
-
 function drawList(){
-  var h="",i=hour;
-  // lange Strecken: nur auffällige Abschnitte einzeln, den Rest zusammenfassen
-  var onlyBad=S.segs.length>30;
+  var h="",i=hour,onlyBad=S.segs.length>30;
   S.segs.forEach(function(s,idx){
     var l=s.lv[i];if(onlyBad&&l===0)return;
     h+='<li><details><summary><span class="pill l'+l+'">'+NAME[l]+'</span><span class="nm">Abschnitt '+(idx+1)+'</span><span class="km">'+(s.m/1000).toFixed(1).replace(".",",")+' km</span></summary><p class="why">'+s.why[i]+'</p></details></li>';
@@ -329,7 +467,6 @@ function drawList(){
   $("listH").textContent=onlyBad?"Auffällige Abschnitte":"Abschnitte";
   $("list").innerHTML=h;
 }
-
 
 /* ---------- Wetter-Hintergrund (Canvas) ---------- */
 var BG=(function(){
@@ -424,16 +561,14 @@ function sceneFor(h,idx){
 }
 BG.set("idle",false);
 
+
+
 /* ---------- Bedienung ---------- */
-$("form").addEventListener("submit",function(e){e.preventDefault();run()});
 $("hr").addEventListener("input",function(e){hour=+e.target.value;if(S)drawAll()});
-$("swap").addEventListener("click",function(){var a=$("from").value;$("from").value=$("to").value;$("to").value=a});
-Array.prototype.forEach.call(document.querySelectorAll(".chips button"),function(b){
-  b.addEventListener("click",function(){$("from").value=b.dataset.a;$("to").value=b.dataset.b;run()});
-});
+$("auto").addEventListener("change",function(e){auto=e.target.checked;saveRoutes();if(auto)applyAuto(true)});
+$("addRoute").addEventListener("click",addRoute);
 $("ack").addEventListener("click",function(){ls("gk_ack","1");show("disc",false)});
 if(ls("gk_ack")!=="1")show("disc",true);
-var f=ls("gk_from"),t=ls("gk_to");if(f)$("from").value=f;if(t)$("to").value=t;
 
 var ua=navigator.userAgent||"",ios=/iPhone|iPad|iPod/.test(ua),and=/Android/.test(ua);
 $("plat").textContent=ios?"iPhone: In Safari auf „Teilen“ tippen und „Zum Home-Bildschirm“ wählen. Nur so sind später Push-Nachrichten möglich (ab iOS 16.4)."
@@ -441,8 +576,13 @@ $("plat").textContent=ios?"iPhone: In Safari auf „Teilen“ tippen und „Zum 
   :"Am Handy öffnen: iPhone über „Zum Home-Bildschirm“ in Safari, Android über „App installieren“ im Browser.";
 
 if("serviceWorker" in navigator&&location.protocol.indexOf("http")===0){try{navigator.serviceWorker.register("sw.js")}catch(e){}}
+
 $("ver").textContent="Version "+VERSION;$("verFoot").textContent="Version "+VERSION+" vom "+VDATE+".";
-run();
+loadRoutes();$("auto").checked=auto;renderRoutes();renderAdhoc();
+active=-1;applyAuto(true);
+// Zeitplan: alle 5 Minuten und beim Zurückkehren in die App prüfen, ob die Strecke wechseln muss
+setInterval(function(){if(auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)},300000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)});
 })();
 </script>
 </body>
