@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.14 – 25.11.2026
+- Amtliche Messung in der Nähe (DWD-Station Stechlin-Menz, über Bright Sky) unter der Wetterkachel.
+
 ## Version 1.13 – 25.11.2026
 - Mini-Karte mit echten Kartenkacheln, Strecke farbig nach Abschnittsstatus.
 - DWD-Warnungen erscheinen als ⚠️ auf der Mini-Karte (am jeweiligen Prüfpunkt, nicht genau am Ort der Warnung).

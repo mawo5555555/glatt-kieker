@@ -162,6 +162,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
     <section class="card" aria-label="Wetter">
       <h2 class="sec">Wetter auf einen Blick</h2>
       <div class="wx" id="wx"></div>
+      <p class="note" id="measure"></p>
       <div class="hours" id="hours"></div>
       <p class="note" id="hoursNote"></p>
       <div id="outlook"></div>
@@ -198,7 +199,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 <script>
 (function(){
 "use strict";
-var VERSION="1.13",VDATE="25.11.2026";
+var VERSION="1.14",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -439,7 +440,7 @@ function run(rt,k0){
   compute(eff,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
     saveCache(eff,d);d.flip=flip;S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
-    setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);
+    setStatus("");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);loadMeasure(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
@@ -508,6 +509,18 @@ function loadOutlook(d){
       drawAll();renderCommute();
     });
   }).catch(function(){});
+}
+
+
+/* ---------- Amtliche Messung in der Nähe (DWD über Bright Sky) ---------- */
+function loadMeasure(d){
+  var mid=d.segs[Math.floor(d.segs.length/2)].pts[0],pts=[{lat:d.A.lat,lon:d.A.lon}];
+  fetchJson("https://api.brightsky.dev/current_weather?lat="+d.A.lat.toFixed(4)+"&lon="+d.A.lon.toFixed(4)+"&tz=Europe/Berlin",15000).then(function(r){
+    var w=r.weather||{},src=(r.sources||[])[0]||{};
+    if(w.temperature==null){$("measure").textContent="";return}
+    var ts=new Date(w.timestamp);
+    $("measure").textContent="Gemessen nah am Start: "+src.station_name+" ("+Math.round((src.distance||0)/1000)+" km), "+w.temperature.toFixed(1).replace(".",",")+" °C um "+String(ts.getHours()).padStart(2,"0")+":"+String(ts.getMinutes()).padStart(2,"0")+" Uhr.";
+  }).catch(function(){$("measure").textContent=""});
 }
 
 /* ---------- Pendelzeiten ---------- */
