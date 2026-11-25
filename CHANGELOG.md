@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.11 – 25.11.2026
+- Nachhall: War es 1–2 Stunden vor der Fahrt glatt und liegt die Fahrbahn noch bei höchstens +1 °C, bleibt die Bewertung mindestens „Vorsicht“.
+
 ## Version 1.10 – 25.11.2026
 - Name geändert in „Glätte-Kieker“.
 
