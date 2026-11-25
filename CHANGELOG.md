@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.39 – 25.11.2026
+- Kacheln verständlicher: „Niederschlag" (Wert „keiner" statt „trocken"), „Frost in 6 Std." mit tiefster Temperatur, z. B. „nein (3°)".
+
 ## Version 1.38 – 25.11.2026
 - Karte automatisch dunkel nach Sonnenuntergang, hell bei Tageslicht (Option: immer dunkel / immer hell).
 

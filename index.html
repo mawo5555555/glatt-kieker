@@ -144,7 +144,7 @@ body{padding:0;overflow:hidden}
 #mapinfo{display:grid;grid-template-columns:repeat(var(--n,3),minmax(0,1fr));gap:6px;padding:8px 0 0}
 .mt{background:var(--card);border:2px solid var(--line);border-radius:12px;padding:5px 8px 6px;min-width:0}
 .mt i{font-style:normal;margin-right:3px}
-.mt small{display:block;font-size:.72rem;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mt small{display:block;font-size:.72rem;font-weight:600;color:var(--muted);line-height:1.15}
 .mt b{display:block;font-size:1.12rem;font-weight:800;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mt.l0{border-color:var(--ok)}.mt.l1{border-color:var(--warn);background:var(--warn-bg)}.mt.l2{border-color:var(--bad);background:var(--bad-bg)}
 #mapchips::-webkit-scrollbar{display:none}
@@ -184,7 +184,7 @@ body.sheetopen #mapstatus{display:none}
 #mapchips button{min-height:52px;font-size:1.05rem}
 #mapinfo{gap:8px;padding-top:10px}
 .mt{padding:8px 12px 10px}
-.mt small{font-size:.95rem}
+.mt small{font-size:.85rem}
 .mt b{font-size:1.6rem}
 #mapstatus{left:16px;right:auto;width:640px;max-width:none;margin:0;bottom:20px;gap:12px}
 #stBtn{min-height:104px;padding:14px 18px;gap:16px}
@@ -300,7 +300,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.38",VDATE="25.11.2026";
+var VERSION="1.39",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -722,10 +722,10 @@ function drawInfo(w,i){
   var ts=g(hs,"temperature_2m",a,0),te=g(he,"temperature_2m",arr,0),fmin=99;
   for(var k=0;k<=6;k++){var tt=g(hs,"temperature_2m",a+k,99);if(tt<fmin)fmin=tt}
   var pr=g(hs,"precipitation",a,0)+g(he,"precipitation",arr,0),sn=g(hs,"snowfall",a,0)+g(he,"snowfall",arr,0);
-  var tile=function(c,ic,l,v){return '<div class="mt '+c+'"><small><i>'+ic+'</i>'+l+'</small><b>'+v+'</b></div>'};
+  var tile=function(c,ic,l,v){return '<div class="mt '+c+'" title="'+(l==="Start→Ziel"?"Temperatur am Start und am Ziel zur Fahrzeit":l==="Frost in 6 Std."?"Tiefste Temperatur an der Strecke in den 6 Stunden ab Fahrtbeginn. Ab 0° kann es frieren und glatt werden.":"Regen oder Schnee an Start und Ziel zur Fahrzeit")+'"><small><i>'+ic+'</i>'+l+'</small><b>'+v+'</b></div>'};
   var h=tile("","🌡️","Start→Ziel",Math.round(ts)+"° → "+Math.round(te)+"°")+
-    tile(pr>0.05?"l1":"",sn>0?"🌨️":(pr>0.05?"🌧️":"☀️"),sn>0?"Schnee":"Regen",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"trocken")+
-    tile(fmin<=0?"l2":(fmin<=2?"l1":""),"❄️","Frost 6 Std.",fmin<=0?"ja":(fmin<=2?"knapp":"nein"));
+    tile(pr>0.05?"l1":"",sn>0?"🌨️":(pr>0.05?"🌧️":"☀️"),sn>0?"Schneefall":"Niederschlag",pr>0.05?pr.toFixed(1).replace(".",",")+" mm":"keiner")+
+    tile(fmin<=0?"l2":(fmin<=2?"l1":""),"❄️","Frost in 6 Std.",(fmin<=0?"ja":(fmin<=2?"knapp":"nein"))+" ("+Math.round(fmin)+"°)");
   var n=3;
   $("mapinfo").style.setProperty("--n",n);$("mapinfo").innerHTML=h;
   $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];$("stT").textContent=$("bt").textContent;
