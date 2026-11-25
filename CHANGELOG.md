@@ -1,5 +1,13 @@
 # Änderungen
 
+## Version 1.19 – 25.11.2026
+- Kartenstil: Esri World Street Map statt CARTO (CARTO verlangt inzwischen einen API-Schlüssel).
+
+## Version 1.18 – 25.11.2026
+- Mini-Karte im Stil von Google Maps (CARTO Voyager), Umschalter auf Luftbild (Esri).
+- Neues, detailliertes weißes Tesla Model 3 (Glasdach, Lichter, Räder, Schatten) in Fahrtrichtung.
+- Zielpin auf der Karte.
+
 ## Version 1.17 – 25.11.2026
 - Mini-Karte überarbeitet: sauberer Streckenstrich mit Schatten, größeres Auto, das in Fahrtrichtung zeigt, kräftigere Kartenfarben.
 
