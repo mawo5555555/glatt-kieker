@@ -137,7 +137,10 @@ body{padding:0;overflow:hidden}
 #sheet.full #sheetBody{overflow-y:auto}
 .card{background:var(--card)}
 .greet{margin-top:0}
-#mapchips{position:fixed;top:max(10px,env(safe-area-inset-top,0px));left:10px;right:10px;z-index:4;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px}
+#topbar{position:fixed;top:max(8px,env(safe-area-inset-top,0px));left:8px;right:8px;z-index:4;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+#topbar h1{font-size:1.05rem}
+#topbar header{margin:0}
+#mapchips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:6px 0 2px}
 #mapchips::-webkit-scrollbar{display:none}
 #mapchips button{flex:none;display:flex;align-items:center;gap:6px;min-height:40px;padding:6px 12px;border-radius:999px;border:2px solid var(--line);background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.3);font-size:.9rem;white-space:nowrap}
 #mapchips button.l0{border-color:var(--ok)}#mapchips button.l1{border-color:var(--warn)}#mapchips button.l2{border-color:var(--bad)}
@@ -145,18 +148,24 @@ body{padding:0;overflow:hidden}
 .riskpin{background:none;border:0}
 .riskpin div{transform:translate(-50%,-50%);display:inline-block;color:#fff;font:600 12px/1.2 var(--font);padding:4px 9px;border-radius:999px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.4);border:2px solid #fff}
 #sheet:not(.full) .greet{display:none}
+#sheet:not(.mid):not(.full) .opt{display:none}
+#mapctl{bottom:calc(var(--vis,230px) + 12px)}
+.rep{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:16px}
+.rep>div{background:var(--card);border-radius:16px;padding:16px;max-width:360px;width:100%}
+.rep button{width:100%;margin-top:8px}
+.rep .go{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+#repnote{margin-top:6px;font-size:.85rem;color:var(--muted)}
+.repm{background:none;border:0}
+.repm div{width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
 <canvas id="bg" aria-hidden="true" hidden></canvas>
 <div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
-<div id="mapchips" aria-label="Meine Fahrten"></div>
-<div id="mapctl"><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
+<div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div></div>
+<div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
 <div id="sheet"><div id="grip" role="button" aria-label="Infos größer oder kleiner" tabindex="0"><i></i></div><div id="sheetBody">
 <main>
-  <header>
-    <h1>Glätte-Kieker <span class="ver" id="ver"></span></h1>
-  </header>
 
   <div class="card disc" id="disc" hidden>
     <h2>Bitte lesen</h2>
@@ -174,19 +183,19 @@ body{padding:0;overflow:hidden}
       <input type="range" id="hr" min="0" max="47" value="0" step="1">
       <div class="strip" id="strip" aria-hidden="true"></div>
     </div>
-    <div id="alerts"></div>
+    <div id="alerts" class="opt"></div>
     <div id="status" class="spin" hidden></div>
     <div id="error" class="err" hidden style="margin-top:8px"></div>
   </section>
 
-  <section class="card" aria-label="Meine Fahrten">
+  <section class="card opt" aria-label="Meine Fahrten">
     <h2 class="sec">Meine Fahrten (nächste 48 Std.)</h2>
     <div class="cms" id="commute"></div>
   </section>
 
   <div id="result" hidden style="display:contents">
     <!-- 2. Wetter -->
-    <section class="card" aria-label="Wetter">
+    <section class="card opt" aria-label="Wetter">
       <h2 class="sec">Wetter auf einen Blick</h2>
       <div class="wx" id="wx"></div>
       <p class="note" id="measure"></p>
@@ -198,7 +207,7 @@ body{padding:0;overflow:hidden}
 </div>
 
   <!-- 4. Strecken und Orte -->
-  <section class="card" aria-label="Strecken">
+  <section class="card opt" aria-label="Strecken">
     <h2 class="sec">Meine Strecken und Zeitplan</h2>
     <p class="note">Die App wählt die Strecke nach der Uhrzeit selbst. Prüfe unter „Start ändern“, ob das richtige Ortsschild gewählt ist.</p>
     <div class="autorow"><input type="checkbox" id="auto" checked><label for="auto">Strecke automatisch nach Uhrzeit wählen</label></div>
@@ -206,15 +215,16 @@ body{padding:0;overflow:hidden}
     <div class="btnrow"><button type="button" id="addRoute">+ Strecke hinzufügen</button></div>
   </section>
 
-  <section class="card" aria-label="Einmalige Strecke">
+  <section class="card opt" aria-label="Einmalige Strecke">
     <h2 class="sec">Einmalige Strecke prüfen</h2>
     <p class="note">Zum Beispiel für eine Fahrt nach Hamburg. Sie wird nicht gespeichert.</p>
     <div id="adhoc"></div>
   </section>
 
-  <div class="card"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
-  <p class="note" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
+  <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
+  <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
+<section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -224,7 +234,7 @@ var sh=document.getElementById("sheet"),gr=document.getElementById("grip"),root=
 function H(){return window.innerHeight*0.92}
 function snaps(){return [230,Math.round(window.innerHeight*0.55),Math.round(H())]}
 var idx=0;
-function set(i,px){idx=i;var v=px!=null?px:snaps()[i];root.style.setProperty("--vis",v+"px");sh.classList.toggle("full",i===2&&px==null);window.gkVis=v}
+function set(i,px){idx=i;var v=px!=null?px:snaps()[i];root.style.setProperty("--vis",v+"px");sh.classList.toggle("full",i===2&&px==null);sh.classList.toggle("mid",i===1&&px==null);window.gkVis=v}
 window.gkSheet=set;set(0);
 var y0,v0,drag=false,moved=false;
 gr.addEventListener("pointerdown",function(e){drag=true;moved=false;y0=e.clientY;v0=window.gkVis;sh.classList.add("drag");gr.setPointerCapture(e.pointerId)});
@@ -239,7 +249,7 @@ gr.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){set((
 <script>
 (function(){
 "use strict";
-var VERSION="1.22",VDATE="25.11.2026";
+var VERSION="1.23",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -643,6 +653,44 @@ function drawWx(){
   $("hours").innerHTML=h;
   $("hoursNote").textContent="Stundenwerte am Startort ab Abfahrt (Temperatur, Niederschlag in mm).";
 }
+(function(){
+var repUrl=function(){return (ls("gk_report")||"").replace(/\/+$/,"")};
+$("repUrl").value=repUrl();
+$("repSave").addEventListener("click",function(){ls("gk_report",$("repUrl").value.trim());alert("Gespeichert.")});
+function dlg(){
+  var b=el("div",{class:"rep"});var c=el("div",{});
+  c.appendChild(el("h2",{class:"sec",text:"Glätte melden"}));
+  c.appendChild(el("p",{class:"note",text:"Wo ist es gerade glatt oder gestreut? Die Meldung wird mit deinem ungefähren Standort gespeichert."}));
+  var st=el("p",{id:"repnote",text:""});c.appendChild(st);
+  var g=el("button",{type:"button",class:"go",text:"Glatt"});var s2=el("button",{type:"button",text:"Gestreut"});var x=el("button",{type:"button",text:"Abbrechen"});
+  function send(kind){
+    if(!repUrl()){st.textContent="Meldeserver ist noch nicht eingerichtet (unter Optionen).";return}
+    st.textContent="Standort wird geholt …";
+    navigator.geolocation.getCurrentPosition(function(p){
+      st.textContent="Wird gesendet …";
+      fetch(repUrl()+"/report",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({lat:p.coords.latitude,lon:p.coords.longitude,kind:kind})})
+        .then(function(r){return r.json()}).then(function(j){if(j.ok){b.remove();setStatus("Danke, Meldung gespeichert.");setTimeout(function(){setStatus("")},4000);loadReports()}else st.textContent="Nicht gespeichert: "+(j.error||"Fehler")})
+        .catch(function(){st.textContent="Keine Verbindung zum Server."});
+    },function(){st.textContent="Standort nicht verfügbar. Bitte Ortung erlauben."},{enableHighAccuracy:true,timeout:15000});
+  }
+  g.onclick=function(){send("glatt")};s2.onclick=function(){send("gestreut")};x.onclick=function(){b.remove()};
+  c.appendChild(g);c.appendChild(s2);c.appendChild(x);b.appendChild(c);
+  b.addEventListener("click",function(e){if(e.target===b)b.remove()});
+  document.body.appendChild(b);
+}
+$("repBtn").addEventListener("click",dlg);
+function loadReports(){
+  if(!repUrl()||!window.gkRepLayer||!S)return;
+  var a=S.A,z=S.B;var lat=(a.lat+z.lat)/2,lon=(a.lon+z.lon)/2;
+  fetch(repUrl()+"/reports?lat="+lat+"&lon="+lon+"&r=0.6").then(function(r){return r.json()}).then(function(j){
+    window.gkRepLayer.clearLayers();
+    (j.reports||[]).forEach(function(r){
+      L.marker([r.lat,r.lon],{icon:L.divIcon({className:"repm",html:'<div style="background:'+(r.kind==="glatt"?"#1e6fd9":"#7a7a7a")+'"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).bindTooltip((r.kind==="glatt"?"Glatt":"Gestreut")+" gemeldet, "+new Date(r.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})).addTo(window.gkRepLayer);
+    });
+  }).catch(function(){});
+}
+window.loadReportsDeferred=loadReports;
+})();
 function drawMap(){
   if(!$("map"))return;
   if(typeof L==="undefined"){$("map").textContent="Karte nicht verfügbar (offline).";return}
@@ -807,7 +855,7 @@ function startCar(path,m){
   carRaf=requestAnimationFrame(step);
 }
 var lastAll=null;
-function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,60],paddingBottomRight:[30,(window.gkVis||230)+30]})}
+function fitRoute(){if(!mini||!lastAll)return;mini.invalidateSize();mini.fitBounds(L.polyline(lastAll).getBounds(),{paddingTopLeft:[30,130],paddingBottomRight:[30,(window.gkVis||230)+30]})}
 $("locBtn").addEventListener("click",function(){fitRoute()});
 function drawMini(){
   if(typeof L==="undefined"||!S)return;
@@ -840,7 +888,9 @@ function drawMini(){
   var carM=L.marker([o.lat,o.lon],{icon:carIcon(deg-90),zIndexOffset:1000}).addTo(mini);
   lastAll=all;
   startCar(S.flip?all.slice().reverse():all,carM);
+  if(!window.gkRepLayer||window.gkRepLayer._map!==mini){window.gkRepLayer=L.layerGroup().addTo(mini)}
   mini.invalidateSize();fitRoute();
+  if(window.loadReportsDeferred)window.loadReportsDeferred();
 }
 $("satBtn").addEventListener("click",function(){ls("gk_sat",ls("gk_sat")==="1"?"0":"1");drawMini()});
 $("dirBtn").addEventListener("click",function(){if(!curRt)return;flip=!flip;run(curRt,hour)});

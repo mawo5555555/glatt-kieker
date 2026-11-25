@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.23 – 25.11.2026
+- Titel und Fahrten-Chips in einer Kopfleiste auf der Karte, die nicht mehr abgeschnitten wird.
+- Unteres Fenster zeigt im kleinen Zustand nur Ampel und Abfahrt. Frost-Warnung, Wetter, Strecken und Optionen erscheinen erst beim Hochziehen.
+- Meldeknopf „Glätte melden“ (glatt oder gestreut) mit Standort. Meldungen der letzten 24 Std. auf der Karte. Adresse des Meldeservers unter Optionen.
+
 ## Version 1.22 – 25.11.2026
 - Meine Fahrten (48 Std.) als Chips oben auf der Karte, Tippen wählt die Fahrt.
 - Gefährliche Abschnitte werden direkt auf der Karte beschriftet (Vorsicht/Gefahr mit Grund).
