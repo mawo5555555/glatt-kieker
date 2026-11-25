@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.35 – 25.11.2026
+- Neues App-Icon: Schneeflocke über Straße mit orangem Warnzeichen.
+
 ## Version 1.34 – 25.11.2026
 - Benachrichtigungen (Push): morgens 5:00 Mo–Fr, 12:00 Mo/Di/Mi/Fr und Do 17:00 vor den Heimfahrten, dazu Meldung bei Änderung der Lage. Zeiten, Tage und Fahrt in den Optionen einstellbar, mit Test-Knopf.
 
