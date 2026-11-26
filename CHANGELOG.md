@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.53 – 26.11.2026
+- Wetterdaten werden nach 10 statt 40 Minuten neu geladen.
+
 ## Version 1.52 – 26.11.2026
 - Nutzungsstatistik: anonyme Gerätezählung; Schalter „Das ist mein Gerät“ in den Optionen schließt eigene Geräte aus und zeigt die Statistik.
 

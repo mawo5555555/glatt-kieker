@@ -315,7 +315,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.52",VDATE="25.11.2026";
+var VERSION="1.53",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -512,7 +512,7 @@ function fetchWeather(cells){
 }
 function fetchWeatherC(cells,ck){
   var pk="gk_w_"+ck,pc=null;try{pc=JSON.parse(ls(pk)||"null")}catch(e){}
-  if(pc&&pc.n===cells.length&&Date.now()-pc.t<2400000)return Promise.resolve(pc.w);
+  if(pc&&pc.n===cells.length&&Date.now()-pc.t<600000)return Promise.resolve(pc.w);
   return fetchWeather(cells).then(function(w){try{ls(pk,JSON.stringify({t:Date.now(),n:cells.length,w:w}))}catch(e){}return w}).catch(function(e){
     if(pc&&pc.n===cells.length&&Date.now()-pc.t<6*3600e3){gkLog("Info","Wetter aus Zwischenspeicher");return pc.w}
     throw e;
