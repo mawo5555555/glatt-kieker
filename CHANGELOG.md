@@ -1,5 +1,12 @@
 # Änderungen
 
+## Version 1.48 – 26.11.2026
+- „Modelle uneinig“ erscheint nur noch, wenn mindestens zwei Wettermodelle Frost (≤ 0,5 °C) melden. Eine einzelne abweichende Quelle löst keinen Hinweis mehr aus.
+
+- Karte wieder Esri (CARTO verlangte plötzlich einen Schlüssel); Schlitten-Beschriftung links und zweizeilig, überdeckt die Knöpfe nicht mehr.
+
+- Karte jetzt OpenStreetMap Deutschland (deutsche, größere Ortsnamen). Satellit nicht mehr zu hell, im Dunkelmodus nicht mehr invertiert, mit Ortsnamen darüber.
+
 ## Version 1.47 – 26.11.2026
 - Schlitten gleitet flüssig zwischen den Positionen (statt Springen), Beschriftung seitlich: „Schlitten fährt / wartet / parkt“ (nicht mehr „Tesla“), hellere Karte (CARTO Voyager), schlankere Routenlinie.
 
