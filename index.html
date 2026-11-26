@@ -315,7 +315,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.49",VDATE="25.11.2026";
+var VERSION="1.50",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -600,7 +600,7 @@ function compute(rt,stage){
           s.lv.push(lvl);s.why.push(txt);
         }
       });
-      cache[ck]={t:Date.now(),d:d};return d;
+      d._t=Date.now();cache[ck]={t:d._t,d:d};return d;
     });
   });
 }
@@ -776,9 +776,9 @@ function drawInfo(w,i){
   if(window.gkRadar&&window.gkRadar.msg){var rr=window.gkRadar;h+=tile(rr.lv?"l1":"","🌧️","Radar 2 Std.",rr.msg);n=2}
   $("mapinfo").style.display="none";$("mapinfo").innerHTML="";
   $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];$("stT").textContent=$("bt").textContent;
-  $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt");
+  $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt")+(S._t?" · Stand "+new Date(S._t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+(Date.now()-S._t>45*60e3?" ⚠️ veraltet":""):"");
 }
-window.gkRedrawInfo=function(){drawInfo()};
+window.gkRedrawInfo=function(){drawInfo()};setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
 window.gkForecastAt=function(lat,lon){
   if(!S||!S.cells)return null;var best=-1,bd=1e9;
   S.cells.forEach(function(c,i){var d=L.latLng(c.lat,c.lon).distanceTo(L.latLng(lat,lon));if(d<bd){bd=d;best=i}});

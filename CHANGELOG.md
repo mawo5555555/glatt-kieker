@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.50 – 26.11.2026
+- Unten in der Statuszeile: „Stand HH:MM“ der Wetterdaten, ab 45 Min. Alter mit ⚠️ „veraltet“.
+
 ## Version 1.49 – 27.11.2026
 - Schlitten fährt auf der Straße weiter (Tempo aus dem Tesla, auf die Route gelegt) statt stehen zu bleiben und zu springen.
 - Schlitten klein in der Übersicht, wächst beim Heranzoomen.
