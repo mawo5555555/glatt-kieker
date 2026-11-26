@@ -1,5 +1,9 @@
 # Änderungen
 
+## Version 1.54 – 26.11.2026
+- Zuverlässigkeit: Push meldet „Keine aktuellen Wetterdaten“, statt still auszufallen; Route wird im Server gespeichert; zweiter Routendienst in der App; Push-Protokoll und Serverzustand in den Optionen.
+- Schneller: beide Wetterabfragen laufen gleichzeitig.
+
 ## Version 1.53 – 26.11.2026
 - Wetterdaten werden nach 10 statt 40 Minuten neu geladen.
 
