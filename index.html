@@ -118,6 +118,7 @@ button.danger{color:var(--bad);border-color:var(--bad)}
 @keyframes nz{0%,100%{opacity:1}50%{opacity:.25}}
 .slg.go .lg1{animation:lg .28s ease-in-out infinite alternate}.slg.go .lg2{animation:lg .28s ease-in-out infinite alternate-reverse}.slg:not(.go) .lg1,.slg:not(.go) .lg2{display:none}
 .slg .nose2{animation:nz .7s ease-in-out infinite}
+.sltip{background:rgba(255,255,255,.94);border:0;border-radius:10px;font-weight:700;color:#14212b;box-shadow:0 2px 6px rgba(0,0,0,.3)}.sltip:before{display:none}
 .stardust span{position:absolute;transform:translate(-50%,-50%);text-shadow:0 0 4px rgba(0,0,0,.5);pointer-events:none}
 .carico{background:none;border:0;font-size:22px;line-height:28px;text-align:center;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4))}
 .card{animation:rise .5s ease both}
@@ -312,7 +313,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.46",VDATE="25.11.2026";
+var VERSION="1.47",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -1062,10 +1063,18 @@ function loadTesla(){
     var go=live&&(T.speed!=null?T.speed>3:hd!==null),xm=new Date().getMonth()===11||new Date().getMonth()===0&&new Date().getDate()<=6;
     if(go){var cols=["#ffd34a","#ffffff","#bfe3ff"];p.forEach(function(x,ix){var ag=Date.now()-x.ts;if(ix===0||ag>20*60e3)return;var f=1-ag/(20*60e3);
       L.marker([x.lat,x.lon],{interactive:false,keyboard:false,icon:L.divIcon({className:"stardust",html:'<span style="color:'+cols[ix%3]+';opacity:'+(0.25+0.75*f).toFixed(2)+';font-size:'+Math.round(8+9*f)+'px">✦</span>',iconSize:[0,0]}),zIndexOffset:900}).addTo(lay)})}
-    L.marker([T.lat,T.lon],{icon:carIcon(deg,{go:go,park:!live,night:document.documentElement.classList.contains("darkmap"),warn:window.gkWarn||0}),zIndexOffset:1100}).bindTooltip((live?(go?(xm?"Schlitten unterwegs":"Tesla jetzt"):(xm?"Schlitten wartet":"Tesla jetzt")):(xm?"Schlitten geparkt ":"Tesla geparkt ")+tm)+tp+dv,{permanent:true,direction:"top",offset:[0,-20]}).addTo(lay);
+    var txt=(live?(go?"Schlitten f\u00e4hrt":"Schlitten wartet"):"Schlitten parkt "+tm)+tp+dv,key=[go,live,document.documentElement.classList.contains("darkmap"),window.gkWarn||0].join();
+    var sm=window.gkSleigh,tgt=L.latLng(T.lat,T.lon);
+    if(!sm||sm._map!==window.gkMap){sm=window.gkSleigh=L.marker(tgt,{icon:carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}),zIndexOffset:1100}).addTo(window.gkMap);sm.bindTooltip(txt,{permanent:true,direction:"right",offset:[42,0],className:"sltip"});sm._key=key;sm._pos=tgt}
+    else{if(sm._key!==key){sm.setIcon(carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}));sm._key=key}sm.setTooltipContent(txt)}
+    if(sm._raf)cancelAnimationFrame(sm._raf);
+    var from=sm.getLatLng(),dist=from.distanceTo(tgt),el=sm.getElement(),sv=el&&el.querySelector("svg");
+    if(sv){sv.style.transition="transform .9s linear";var dd=(follow&&rot)?-90:(dist>8?bearing([from.lng,from.lat],[tgt.lng,tgt.lat])-90:deg);sv.style.transform="rotate("+dd+"deg)"}
+    if(dist<3||dist>3000||!go){sm.setLatLng(tgt)}
+    else{var t0=null,D=14000;(function stp(ts){if(t0===null)t0=ts;var u=Math.min(1,(ts-t0)/D);sm.setLatLng([from.lat+(tgt.lat-from.lat)*u,from.lng+(tgt.lng-from.lng)*u]);if(follow&&window.gkMap)window.gkMap.panTo(sm.getLatLng(),{animate:false});if(u<1)sm._raf=requestAnimationFrame(stp)})(performance.now())}
     if(follow&&window.gkMap){
       if(rot)window.gkMap.setBearing(live&&window.gkHeading!=null?window.gkHeading:0);
-      window.gkMap.setView([T.lat,T.lon],16,{animate:true});
+      if(window.gkMap.getZoom()!==16||!go)window.gkMap.setView([T.lat,T.lon],16,{animate:true});
     }
     if(window.gkCarM&&window.gkCarM._map)window.gkCarM.remove();
   }).catch(function(e){if(e!==0){$("rkSt")&&($("rkSt").textContent="Tesla: Netzfehler "+(e&&e.message||e));gkLog("Fehler","Tesla: "+(e&&e.message||e))}});
@@ -1232,7 +1241,7 @@ function carIcon(deg,o){
 var base="map";
 function tiles(sat){
   return sat?L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,attribution:"Luftbild © Esri"})
-            :L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}",{maxZoom:18,attribution:"Karte © Esri, HERE, Garmin, OpenStreetMap-Mitwirkende"});
+            :L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{maxZoom:19,subdomains:"abcd",attribution:"Karte © OpenStreetMap-Mitwirkende, © CARTO"});
 }
 function pin(color){return L.divIcon({className:"pin",html:'<svg viewBox="0 0 24 32" width="26" height="34" style="filter:drop-shadow(0 2px 2px rgba(0,0,0,.4))"><path d="M12 0C5.4 0 0 5.2 0 11.6 0 20 12 32 12 32s12-12 12-20.4C24 5.2 18.6 0 12 0z" fill="'+color+'"/><circle cx="12" cy="11.5" r="4.6" fill="#fff"/></svg>',iconSize:[26,34],iconAnchor:[13,32]})}
 var carRaf=0;
@@ -1267,11 +1276,11 @@ function drawMini(){
   var all=[];
   S.segs.forEach(function(s){all=all.concat(s.pts.map(function(p){return [p[1],p[0]]}))});
   // Schatten, weißer Rand, dann Abschnittsfarben
-  L.polyline(all,{color:"#0b2233",weight:14,opacity:.25,lineCap:"round",lineJoin:"round"}).addTo(mini);
-  L.polyline(all,{color:"#ffffff",weight:10,opacity:.95,lineCap:"round",lineJoin:"round"}).addTo(mini);
+  L.polyline(all,{color:"#0b2233",weight:11,opacity:.3,lineCap:"round",lineJoin:"round"}).addTo(mini);
+  L.polyline(all,{color:"#ffffff",weight:8,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
   S.segs.forEach(function(s){
     var ll=s.pts.map(function(p){return [p[1],p[0]]}),lv=s.lv[hour]||0;
-    L.polyline(ll,{color:COL[lv],weight:6,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
+    L.polyline(ll,{color:COL[lv],weight:5,opacity:1,lineCap:"round",lineJoin:"round"}).addTo(mini);
   });
   L.polyline(all,{color:"#ffffff",weight:1.5,opacity:.7,dashArray:"2 14",lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
   window.gkWarn=0;S.segs.forEach(function(s){var l=s.lv[hour]||0;if(l>window.gkWarn)window.gkWarn=l});

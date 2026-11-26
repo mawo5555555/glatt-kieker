@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.47 – 26.11.2026
+- Schlitten gleitet flüssig zwischen den Positionen (statt Springen), Beschriftung seitlich: „Schlitten fährt / wartet / parkt“ (nicht mehr „Tesla“), hellere Karte (CARTO Voyager), schlankere Routenlinie.
+
 ## Version 1.46 – 25.11.2026
 - Kartenhinweis „Wettermodelle uneinig“ wird nicht mehr abgeschnitten (kurz: „Modelle uneinig“).
 
