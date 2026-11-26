@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.49 – 27.11.2026
+- Schlitten fährt auf der Straße weiter (Tempo aus dem Tesla, auf die Route gelegt) statt stehen zu bleiben und zu springen.
+- Schlitten klein in der Übersicht, wächst beim Heranzoomen.
+- Kacheln unter den Uhrzeiten ausgeblendet.
+
 ## Version 1.48 – 26.11.2026
 - „Modelle uneinig“ erscheint nur noch, wenn mindestens zwei Wettermodelle Frost (≤ 0,5 °C) melden. Eine einzelne abweichende Quelle löst keinen Hinweis mehr aus.
 
