@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.52 – 26.11.2026
+- Nutzungsstatistik: anonyme Gerätezählung; Schalter „Das ist mein Gerät“ in den Optionen schließt eigene Geräte aus und zeigt die Statistik.
+
 ## Version 1.51 – 26.11.2026
 - Karte: höchstens 2 Hinweise, nahe Abschnitte (< 3 km) zusammengefasst, Ortsname statt Ursache („! Vorsicht bei Löwenberg“), Ursache beim Antippen. Restglätte nur noch als Streckenfarbe.
 

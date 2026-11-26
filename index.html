@@ -285,7 +285,7 @@ body.sheetopen #mapstatus{display:none}
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
-<section class="card opt" aria-label="Kontrolle"><h2 class="sec">Vorhersage-Kontrolle</h2><p class="note" id="calSt">Lade …</p></section>
+<section class="card opt" aria-label="Statistik"><h2 class="sec">Nutzung</h2><label class="note"><input type="checkbox" id="meDev"> Das ist mein Gerät, nicht mitzählen</label><div class="note" id="statSt"></div></section><section class="card opt" aria-label="Kontrolle"><h2 class="sec">Vorhersage-Kontrolle</h2><p class="note" id="calSt">Lade …</p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
 </div></div>
 
@@ -315,7 +315,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.51",VDATE="25.11.2026";
+var VERSION="1.52",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -989,6 +989,14 @@ function calLoad(){
   }).catch(function(){var el=document.getElementById("calSt");if(el)el.textContent="Kontrolle nicht erreichbar."});
 }
 calLoad();
+(function(){var cb=$("meDev");cb.checked=ls("gk_me")==="1";
+  function stats(){var rk=ls("gk_rk"),el=$("statSt");if(!rk||!cb.checked){el.textContent="";return}
+    fetch(repUrl()+"/stats?k="+rk).then(function(r){return r.json()}).then(function(j){if(!j.days){el.textContent="Keine Statistik.";return}
+      el.innerHTML="Andere Geräte gesamt: <b>"+j.total+"</b><br>"+j.days.slice(0,14).map(function(x){return x.d.slice(8,10)+"."+x.d.slice(5,7)+".: "+x.dev+" Geräte, "+x.hits+" Aufrufe"+(x.neu?", "+x.neu+" neu":"")}).join("<br>")}).catch(function(){el.textContent="Statistik nicht erreichbar."})}
+  cb.addEventListener("change",function(){ls("gk_me",cb.checked?"1":"0");stats()});stats();
+  if(ls("gk_me")!=="1"){var id=ls("gk_dev");if(!id){id="";for(var i=0;i<16;i++)id+="0123456789abcdef"[Math.floor(Math.random()*16)];ls("gk_dev",id)}
+    fetch(repUrl()+"/hit",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:id})}).catch(function(){})}
+})();
 function supported(){return "serviceWorker" in navigator&&"PushManager" in window&&"Notification" in window}
 function urlB64(b){var p="=".repeat((4-b.length%4)%4),r=atob((b+p).replace(/-/g,"+").replace(/_/g,"/")),o=new Uint8Array(r.length),i;for(i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o}
 function post(path,body){return fetch(API()+path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}).then(function(r){return r.json()})}
