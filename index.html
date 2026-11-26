@@ -315,7 +315,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.50",VDATE="25.11.2026";
+var VERSION="1.51",VDATE="25.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -1221,6 +1221,8 @@ function gkSnap(R,lat,lon){var best={off:1e9,d:0},kx=Math.cos(lat*Math.PI/180)*1
     if(o<best.off)best={off:o,d:R.cum[i-1]+t*(R.cum[i]-R.cum[i-1])}}return best}
 function gkAt(R,d){var n=R.pts.length,c=R.cum;d=Math.max(0,Math.min(c[n-1],d));var lo=1,hi=n-1;while(lo<hi){var m=(lo+hi)>>1;if(c[m]<d)lo=m+1;else hi=m}
   var a=R.pts[lo-1],b=R.pts[lo],u=(d-c[lo-1])/((c[lo]-c[lo-1])||1);return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u]}
+function gkPlace(lat,lon,cb){var k="gk_pl_"+lat.toFixed(2)+"_"+lon.toFixed(2),c=ls(k);if(c)return cb(c);
+  fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&accept-language=de&lat="+lat.toFixed(4)+"&lon="+lon.toFixed(4)).then(function(r){return r.json()}).then(function(j){var p=j&&j.address,n=p&&(p.village||p.town||p.city||p.hamlet||p.suburb);if(n){ls(k,n);cb(n)}}).catch(function(){})}
 function bearing(a,b){var p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dl=(b[0]-a[0])*Math.PI/180;
   var y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360}
 function carIcon(deg,o){
@@ -1308,11 +1310,14 @@ function drawMini(){
   });
   L.polyline(all,{color:"#ffffff",weight:1.5,opacity:.7,dashArray:"2 14",lineCap:"round",className:"rt-line "+(S.flip?"rev":"fwd")}).addTo(mini);
   window.gkWarn=0;S.segs.forEach(function(s){var l=s.lv[hour]||0;if(l>window.gkWarn)window.gkWarn=l});
-  var runs=[],cur=null;
-  S.segs.forEach(function(s,i){var lv=s.lv[hour]||0;if(lv>=1){if(!cur){cur={a:i,b:i,lv:lv,why:s.why[hour]||""};runs.push(cur)}else{cur.b=i;if(lv>cur.lv){cur.lv=lv;cur.why=s.why[hour]||""}}}else cur=null});
-  runs.sort(function(x,y){return y.lv-x.lv||(y.b-y.a)-(x.b-x.a)}).slice(0,4).forEach(function(r){
-    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],t=(r.lv>1?"Gefahr: ":"Vorsicht: ")+(r.why||"").replace(/^Wettermodelle uneinig.*$/,"Modelle uneinig").replace(/[.:].*$/,"").replace(/^Nachhall/,"Restglätte").slice(0,26);
-    L.marker([p[1],p[0]],{icon:L.divIcon({className:"riskpin",html:'<div style="background:'+COL[r.lv]+'">'+(r.lv>1?"!! ":"! ")+t.replace(/^(Gefahr|Vorsicht): /,"")+'</div>',iconSize:[0,0]}),zIndexOffset:900}).addTo(mini);
+  var runs=[],cur=null,km=S.segs.map(function(s){var d=0;for(var j=1;j<s.pts.length;j++)d+=L.latLng(s.pts[j-1][1],s.pts[j-1][0]).distanceTo(L.latLng(s.pts[j][1],s.pts[j][0]));return d/1000});
+  S.segs.forEach(function(s,i){var lv=s.lv[hour]||0,w=s.why[hour]||"";if(lv===1&&/^Nachhall/.test(w))lv=0;
+    if(lv>=1){if(cur&&cur.gap<3){cur.b=i;cur.gap=0;if(lv>cur.lv){cur.lv=lv;cur.why=w}}else{cur={a:i,b:i,lv:lv,why:w,gap:0};runs.push(cur)}}
+    else if(cur){cur.gap+=km[i];if(cur.gap>=3)cur=null}});
+  runs.sort(function(x,y){return y.lv-x.lv||(y.b-y.a)-(x.b-x.a)}).slice(0,2).forEach(function(r){
+    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],why=(r.why||"").replace(/^Wettermodelle uneinig.*$/,"Modelle uneinig").replace(/[.:].*$/,""),tag=r.lv>1?"!! Glatt":"! Vorsicht";
+    var mk=L.marker([p[1],p[0]],{icon:L.divIcon({className:"riskpin",html:'<div style="background:'+COL[r.lv]+'">'+tag+'</div>',iconSize:[0,0]}),zIndexOffset:900}).bindTooltip(why,{direction:"top",offset:[0,-40]}).addTo(mini);
+    gkPlace(p[1],p[0],function(n){if(n&&mk._icon){var d=mk._icon.querySelector("div");if(d)d.textContent=tag+" bei "+n}});
   });
   (S.alerts||[]).forEach(function(a){
     L.marker([a.lat,a.lon],{icon:L.divIcon({className:"alertico",html:"⚠️",iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip(a.e).addTo(mini);
