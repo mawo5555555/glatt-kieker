@@ -315,7 +315,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 <script>
 (function(){
 "use strict";
-var VERSION="1.54",VDATE="25.11.2026";
+var VERSION="1.55",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var VARS=["temperature_2m","dew_point_2m","soil_temperature_0cm","relative_humidity_2m","precipitation","rain","snowfall","weather_code","cloud_cover","wind_speed_10m","visibility","is_day"];
 var $=function(i){return document.getElementById(i)};
@@ -967,7 +967,8 @@ var PUB="BNW0uRCX4Hm10Aby2CxKaQMa-gASEmKa9b3SMEeIEj3g-8sQ2HtMaTgOpQWdULk6VT9C_iz
 var box=$("pushBox"),note=$("pushNote");if(!box)return;
 function defSl(){return [{on:true,d:[1,2,3,4,5],h:5,m:0,r:0,dh:6,dm:30},{on:true,d:[1,2,3,5],h:12,m:0,r:1,dh:13,dm:0},{on:true,d:[4],h:17,m:0,r:1,dh:17,dm:0}]}
 var cfg=null;try{cfg=JSON.parse(ls(KEY)||"null")}catch(e){}
-if(!cfg||!cfg.slots)cfg={slots:defSl(),change:true};
+if(!cfg||!cfg.slots)cfg={slots:defSl(),change:false};
+cfg.change=false; // 1.55: nur feste Zeiten
 var API=function(){return (ls("gk_report")||"https://glaettekieker-api.mawo555.workers.dev").replace(/\/+$/,"")};
 function wShow(w){
   var el=document.getElementById("calSt");if(!el||!w||!w.length)return;
@@ -1039,9 +1040,6 @@ function render(sub){
       x.addEventListener("click",function(){var i=sl.d.indexOf(d);if(i>=0)sl.d.splice(i,1);else sl.d.push(d);paint()});paint();dd.appendChild(x)});
     row.appendChild(dd);box.appendChild(row);
   });
-  var cl=document.createElement("label");cl.style.cssText="display:flex;gap:8px;align-items:center;margin:8px 0";
-  var cc=document.createElement("input");cc.type="checkbox";cc.checked=!!cfg.change;cc.addEventListener("change",function(){cfg.change=cc.checked});
-  cl.appendChild(cc);cl.appendChild(document.createTextNode("Zusätzlich melden, wenn sich die Lage ändert"));box.appendChild(cl);
   var sv=document.createElement("button");sv.type="button";sv.className="go";sv.textContent="Speichern";
   sv.addEventListener("click",function(){curSub().then(function(sb){return sb&&save(sb)}).then(function(j){say(j&&j.ok?"Gespeichert.":"Nicht gespeichert.");gkLog("Push","Einstellungen gespeichert")}).catch(function(e){say("Fehler: "+(e&&e.message||e))})});
   var ts=document.createElement("button");ts.type="button";ts.textContent="Test-Nachricht senden";

@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.55 – 27.11.2026
+- Push nur noch zu den festen Zeiten aus dem Zeitplan; „Lage geändert“-Nachrichten entfallen (Schalter entfernt, Server sendet sie nicht mehr).
+
 ## Version 1.54 – 26.11.2026
 - Zuverlässigkeit: Push meldet „Keine aktuellen Wetterdaten“, statt still auszufallen; Route wird im Server gespeichert; zweiter Routendienst in der App; Push-Protokoll und Serverzustand in den Optionen.
 - Schneller: beide Wetterabfragen laufen gleichzeitig.
