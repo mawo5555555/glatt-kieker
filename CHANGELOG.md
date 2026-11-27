@@ -1,5 +1,13 @@
 # Änderungen
 
+## Version 1.60 – 27.11.2026
+- Neue Karte: Folgen-Knopf zoomt jetzt auch auf das stehende Auto (geneigt), beim Fahren folgt die Karte in Fahrtrichtung.
+- Genauere Fahrbahntemperatur: Brücken (frieren früher) und Waldstücke (nachts etwas wärmer, morgens länger kalt) an der Strecke werden aus OpenStreetMap erkannt und berücksichtigt. Auch klare, windstille Nächte und Restwärme nach sonnigen Tagen fließen ein. Die Werte sind Faustwerte und werden mit den Messungen nachgestellt.
+- Statt „Wettermodelle uneinig“ steht jetzt eine Wahrscheinlichkeit da, z. B. „Glätte möglich (20 %)“ oder „Glätte wahrscheinlich (70 %)“. Die Farben bleiben wie gewohnt.
+- Regen oder Schnee in den nächsten 6 Stunden: Beginn auf die Viertelstunde genau („Schnee ab 14:15 Uhr“).
+- Meldet jemand „Gestreut“, wird der Abschnitt dort für einige Stunden eine Stufe milder eingestuft (nicht bei Eisregen).
+- Optionen: kurzer Wochenbericht mit Trefferquote, Fehlalarmen und Genauigkeit der Wettermodelle.
+
 ## Version 1.59 – 27.11.2026
 - Neue Karte (Test): Statt des Kastens fährt jetzt ein echt wirkendes weißes 3D-Auto mit glänzendem Lack, getönten Scheiben und Rädern. Weicher Schatten darunter, nachts weiche Scheinwerferkegel und rot glimmende Rücklichter. Bei kleinem Zoom wird es größer gezeigt, damit man es sieht.
 - Lädt das Modell nicht, erscheint wie bisher das einfache Auto.

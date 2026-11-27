@@ -335,7 +335,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.59",VDATE="27.11.2026";
+var VERSION="1.60",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -496,7 +496,7 @@ function run(rt,k0){
   compute(eff,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
     saveCache(eff,d);d.flip=flip;S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
-    setStatus("");gkLog("Info","Strecke geladen ("+Math.round(d.km)+" km)");show("sliderBox",true);show("result",true);drawAll();loadAlerts(d);loadOutlook(d);loadMeasure(d);
+    setStatus("");gkLog("Info","Strecke geladen ("+Math.round(d.km)+" km"+(d.osm?", Brücken/Wald berücksichtigt":"")+")");show("sliderBox",true);show("result",true);drawAll();if(window.loadSalt)window.loadSalt(d);loadAlerts(d);loadOutlook(d);loadMeasure(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
@@ -635,8 +635,9 @@ function worst(i){var m=0;S.segs.forEach(function(s){if(s.lv[i]>m)m=s.lv[i]});re
 function drawAll(){
   var i=hour,w=worst(i),bad=S.segs.filter(function(s){return s.lv[i]>0}).length;
   $("banner").className="banner l"+w;$("dot").textContent=SYM[w];
-  $("bt").textContent=w===0?"Keine Glätte erwartet":(w===1?"Vorsicht auf Teilen der Strecke":"Glättegefahr auf der Strecke");
-  $("bs").textContent=(w===0?"Alle "+S.segs.length+" Abschnitte unauffällig":bad+" von "+S.segs.length+" Abschnitten betroffen")+" · "+S.km.toFixed(0)+" km, ca. "+fmtMin(S.durMin)+(S.front!=null&&i>=S.front?" · Wetterfront berücksichtigt":"");
+  var pp=w>0?probAt(S,i):null;
+  $("bt").textContent=(w===0?"Keine Glätte erwartet":(w===1?"Vorsicht auf Teilen der Strecke":"Glättegefahr auf der Strecke"))+(pp!=null?" · Glätte "+(pp>=60?"wahrscheinlich":"möglich")+" ("+pp+" %)":"");
+  $("bs").textContent=(S.pre?S.pre.kind+" ab "+S.pre.time.slice(11,16)+" Uhr · ":"")+(w===0?"Alle "+S.segs.length+" Abschnitte unauffällig":bad+" von "+S.segs.length+" Abschnitten betroffen")+" · "+S.km.toFixed(0)+" km, ca. "+fmtMin(S.durMin)+(S.front!=null&&i>=S.front?" · Wetterfront berücksichtigt":"");
   $("hl").textContent=(i===0?"jetzt ("+dayTime(S.times[S.start])+")":dayTime(S.times[S.start+i]));
   var strip="";for(var k=0;k<S.n;k++)strip+='<i style="background:'+COL[worst(k)]+'"></i>';$("strip").innerHTML=strip;
   var sc=sceneFor(S.w[S.segs[0].cell].hourly,S.start+hour);BG.set(sc[0],sc[1]);
@@ -754,6 +755,14 @@ function loadReports(){
   }).catch(function(){});
 }
 window.loadReportsDeferred=loadReports;
+/* 1.60: Meldung "gestreut" stuft betroffene Abschnitte einige Stunden herab (nicht bei Eisregen) */
+window.loadSalt=function(d){
+  if(!repUrl())return;var a=d.A,z=d.B;
+  fetch(repUrl()+"/reports?lat="+((a.lat+z.lat)/2)+"&lon="+((a.lon+z.lon)/2)+"&r=0.6").then(function(r){return r.json()}).then(function(j){
+    var n=applySalt(d,(j.reports||[]).filter(function(r){return r.kind==="gestreut"}));
+    if(n&&S===d){gkLog("Info","Streumeldung berücksichtigt ("+n+" Abschnitt-Stunden herabgestuft)");drawAll()}
+  }).catch(function(){});
+}
 window.gkLogRender=function(){var b=$("logBox");if(!b)return;var l=[];try{l=JSON.parse(ls("gk_log")||"[]")}catch(e){}
 b.value=l.slice().reverse().map(function(x){var d=new Date(x[0]);return d.toLocaleDateString("de-DE",{day:"2-digit",month:"2-digit"})+" "+d.toLocaleTimeString("de-DE")+" v"+x[1]+" "+x[2]+": "+x[3]}).join("\n")||"Noch keine Einträge."};
 $("logCopy").addEventListener("click",function(){var b=$("logBox");b.select();try{navigator.clipboard.writeText(b.value)}catch(e){document.execCommand("copy")}});
@@ -878,10 +887,20 @@ function calShow(c){
   for(k in nm)if(c.n[k])o.push(nm[k]+": "+(c.b[k]>0?"+":"")+c.b[k]+" °C im Schnitt, Fehler ±"+c.mae[k]+" °C");
   el.textContent=c.n.i+" Vergleiche über "+c.days+" Tage. "+o.join(" · ")+". "+(c.apply?"Gewichte werden automatisch angepasst (ICON "+c.w.i+", ECMWF "+c.w.e+", GFS "+c.w.g+").":"Noch nur Aufzeichnung, Anpassung startet nach 7 Tagen mit genug Daten.")
 }
+/* 1.60: Wochenbericht in zwei Saetzen */
+function weekShow(d){
+  var el=document.getElementById("calSt");if(!el||!d)return;var c=d.cal,w=(d.wlog||[]).slice(-7),f=(d.flog||[]).slice(-7),h=0,m=0,i,wd=0,fa=0;
+  for(i=0;i<w.length;i++){h+=w[i].hit;m+=w[i].miss}for(i=0;i<f.length;i++){wd+=f[i].warn?1:0;fa+=f[i].fa?1:0}
+  var nm={i:"ICON",e:"ECMWF",g:"GFS"},o=[],k;if(c&&c.mae)for(k in nm)if(c.mae[k]!=null)o.push(nm[k]+" ±"+c.mae[k]+" °C");
+  var s1="Letzte 7 Tage: "+(h+m?"Trefferquote "+Math.round(100*h/(h+m))+" % ("+h+" von "+(h+m)+" Glättemeldungen vorhergesagt)":"noch keine Glättemeldungen zum Vergleich")+", "+(f.length?fa+" Fehlalarm"+(fa===1?"":"e")+" an "+wd+" Warntagen (Tesla über +3 °C und trocken).":"Fehlalarme werden noch gezählt.");
+  var s2=o.length?"Mittlerer Fehler je Modell: "+o.join(", ")+(c.w?"; Gewichte ICON "+c.w.i+", ECMWF "+c.w.e+", GFS "+c.w.g+(c.apply?"":" (noch nicht aktiv)"):"")+".":"Modellfehler werden noch gesammelt.";
+  var p=document.getElementById("wkSt");if(!p){p=document.createElement("p");p.id="wkSt";p.className="note";el.parentNode.insertBefore(p,el)}
+  p.innerHTML="<b>Wochenbericht:</b> "+s1+" "+s2;
+}
 function calLoad(){
   fetch(API()+"/calib").then(function(r){return r.json()}).then(function(d){
     if(d&&d.cal){try{localStorage.setItem("gk_cal",JSON.stringify(d.cal))}catch(e){}CAL=d.cal.apply?d.cal:null}
-    calShow(d&&d.cal);wShow(d&&d.wlog);
+    calShow(d&&d.cal);wShow(d&&d.wlog);weekShow(d);
   }).catch(function(){var el=document.getElementById("calSt");if(el)el.textContent="Kontrolle nicht erreichbar."});
 }
 calLoad();
@@ -1218,7 +1237,7 @@ function drawMini(){
     if(lv>=1){if(cur&&cur.gap<3){cur.b=i;cur.gap=0;if(lv>cur.lv){cur.lv=lv;cur.why=w}}else{cur={a:i,b:i,lv:lv,why:w,gap:0};runs.push(cur)}}
     else if(cur){cur.gap+=km[i];if(cur.gap>=3)cur=null}});
   runs.sort(function(x,y){return y.lv-x.lv||(y.b-y.a)-(x.b-x.a)}).slice(0,2).forEach(function(r){
-    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],why=(r.why||"").replace(/^Wettermodelle uneinig.*$/,"Modelle uneinig").replace(/[.:].*$/,""),tag=r.lv>1?"!! Glatt":"! Vorsicht";
+    var seg=S.segs[Math.round((r.a+r.b)/2)],p=seg.pts[Math.floor(seg.pts.length/2)],why=(r.why||"").replace(/^Wettermodelle uneinig.*$/,"Modelle uneinig").replace(/^Glätte (möglich|wahrscheinlich) \((\d+) %\).*$/,"Glätte $2 %").replace(/[.:].*$/,""),tag=r.lv>1?"!! Glatt":"! Vorsicht";
     var mk=L.marker([p[1],p[0]],{icon:L.divIcon({className:"riskpin",html:'<div style="background:'+COL[r.lv]+'">'+tag+'</div>',iconSize:[0,0]}),zIndexOffset:900}).bindTooltip(why,{direction:"top",offset:[0,-40]}).addTo(mini);
     gkPlace(p[1],p[0],function(n){if(n&&mk._icon){var d=mk._icon.querySelector("div");if(d)d.textContent=tag+" bei "+n}});
   });
@@ -1324,7 +1343,7 @@ function nmStart(){
     var m=NM.map=new maplibregl.Map({container:d,style:nmStyleUrl(),center:[13.1,52.9],zoom:9,attributionControl:{compact:true},maxPitch:70});
     NM.dark=nmDark();
     m.on("error",function(e){gkLog("Fehler","Neue Karte: "+(e&&e.error&&e.error.message||"unbekannt"))});
-    m.on("dragstart",function(e){if(e.originalEvent&&NM.follow){NM.follow=false;if(ls("gk_follow")==="1")setFollow(false)}});
+    m.on("dragstart",function(e){if(e.originalEvent&&NM.follow){NM.follow=false;NM.manual=false;if(ls("gk_follow")==="1")setFollow(false)}});
     m.on("style.load",function(){try{nmBigNames();NM.ready=true;nmRoute();nmCarLayer();nmRadar()}catch(e){gkLog("Fehler","Neue Karte Stil: "+e.message)}});
     nmLoad("https://unpkg.com/three@0.147.0/build/three.min.js").then(function(){var ex="https://unpkg.com/three@0.147.0/examples/js/";return Promise.all([nmLoad(ex+"loaders/GLTFLoader.js"),nmLoad(ex+"environments/RoomEnvironment.js")]).catch(function(){gkLog("Info","GLTFLoader fehlt – einfaches 3D-Auto")})}).then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
     requestAnimationFrame(nmLoop);
@@ -1426,7 +1445,7 @@ function nmLoop(ts){if(!NM.map)return;requestAnimationFrame(nmLoop);if(document.
   if(s&&s.ll){if(!NM.flag){var fe=document.createElement("div");fe.className="nmflag";NM.flag=new maplibregl.Marker({element:fe,anchor:"bottom-left",offset:[14,-18]}).setLngLat([0,0]).addTo(m)}
     NM.flag.setLngLat([s.ll[1],s.ll[0]]);var tx=window.gkTeslaTxt||"";if(NM.flag._t!==tx){NM.flag._t=tx;NM.flag.getElement().innerHTML=tx.replace(/Schlitten/g,"Auto")}}
   else if(NM.flag){NM.flag.remove();NM.flag=null}
-  if(drive&&NM.follow&&s&&s.ll){var H=m.getContainer().clientHeight;
+  if((drive||NM.manual)&&NM.follow&&s&&s.ll){var H=m.getContainer().clientHeight;
     if(!nmWasDrive){m.easeTo({center:[s.ll[1],s.ll[0]],zoom:16.3,pitch:55,bearing:s.hd,padding:{top:H*.45,bottom:H*.08,left:0,right:0},duration:1200});nmWasDrive=ts+1300}
     else if(ts>nmWasDrive)m.jumpTo({center:[s.ll[1],s.ll[0]],bearing:s.hd,pitch:55})}
   else if(nmWasDrive){nmWasDrive=false;nmOverview(true)}
@@ -1436,8 +1455,8 @@ window.gkSimDrive=function(kmh,f,stop){if(window.gkSimT){clearInterval(window.gk
   kmh=kmh||80;f=f||1;var d=0,dir=S&&S.flip?-1:1,tot=R.cum[R.cum.length-1];if(dir<0)d=tot;
   function tick(){var p=gkAt(R,d),q=gkAt(R,d+dir*30);window.gkHeading=bearing([p[1],p[0]],[q[1],q[0]]);window.gkTesla={lat:p[0],lon:p[1],ts:Date.now(),speed:kmh,temp_out:-1.5};window.gkTeslaTxt="Schlitten fährt<br>-1,5 °C";d+=dir*kmh/3.6*15*f;if(d<0||d>tot)window.gkSimDrive(0,0,true)}
   tick();window.gkSimT=setInterval(tick,15000/f);return "läuft: "+kmh+" km/h, Faktor "+f};
-$("followBtn").addEventListener("click",function(){NM.follow=ls("gk_follow")==="1";if(NM.follow&&nmDriving())nmWasDrive=false});
-$("locBtn").addEventListener("click",function(){if(NM.map){NM.follow=false;nmWasDrive=false;nmOverview(true)}});
+$("followBtn").addEventListener("click",function(){NM.follow=ls("gk_follow")==="1";NM.manual=NM.follow;nmWasDrive=false;gkLog("Bedienung","Neue Karte: Folgen "+(NM.follow?"an":"aus"))}); // 1.60: Folgen auch im Stand
+$("locBtn").addEventListener("click",function(){if(NM.map){NM.follow=false;NM.manual=false;nmWasDrive=false;nmOverview(true)}});
 $("radarBtn").addEventListener("click",function(){setTimeout(nmRadar,0)});
 (function(){var cb=$("newMapOn");if(!cb)return;cb.checked=NM.on;cb.addEventListener("change",function(){NM.on=cb.checked;ls("gk_newmap",NM.on?"1":"0");gkLog("Info","Neue Karte (Test): "+(NM.on?"an":"aus"));
   if(NM.on){NM.failed=false;if(S)nmStart()}else{var d=$("nmap");if(d)d.style.display="none";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;NM.flag=null;NM.svg=null;NM.car=null;$("satBtn").disabled=false;$("satBtn").style.opacity="";if(mini){mini.invalidateSize();fitRoute()}}})})();
