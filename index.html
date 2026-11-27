@@ -335,7 +335,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.60",VDATE="27.11.2026";
+var VERSION="1.61",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -982,15 +982,15 @@ function loadTesla(){
     var dv="";
     try{if(T.temp_out!=null&&window.gkForecastAt){var fc=window.gkForecastAt(T.lat,T.lon);if(fc!=null&&Math.abs(T.temp_out-fc)>=1){dv=" (Prognose "+String(Math.round(fc*10)/10).replace(".",",")+" °)";gkLog("Info","Tesla misst "+T.temp_out+" °C, Prognose "+fc.toFixed(1)+" °C")}}}catch(x){}
     var hd=null,j;for(j=1;j<recent.length&&hd===null;j++){var qq=recent[j];if(L.latLng(qq.lat,qq.lon).distanceTo(L.latLng(T.lat,T.lon))>25)hd=bearing([qq.lon,qq.lat],[T.lon,T.lat])}
-    if(hd!==null)window.gkHeading=hd;
+    hd=gkRoadHd(T.lat,T.lon,hd);if(hd!==null)window.gkHeading=hd;
     var follow=ls("gk_follow")==="1",rot=!!(window.gkMap&&window.gkMap.setBearing);
     var deg=(follow&&rot)?-90:(hd!==null?hd-90:-90);
     var go=live&&(T.speed!=null?T.speed>3:hd!==null),xm=new Date().getMonth()===11||new Date().getMonth()===0&&new Date().getDate()<=6;
     if(go){var cols=["#ffd34a","#ffffff","#bfe3ff"];p.forEach(function(x,ix){var ag=Date.now()-x.ts;if(ix===0||ag>20*60e3)return;var f=1-ag/(20*60e3);
       L.marker([x.lat,x.lon],{interactive:false,keyboard:false,icon:L.divIcon({className:"stardust",html:'<span style="color:'+cols[ix%3]+';opacity:'+(0.25+0.75*f).toFixed(2)+';font-size:'+Math.round(8+9*f)+'px">✦</span>',iconSize:[0,0]}),zIndexOffset:900}).addTo(lay)})}
-    var txt=(live?(go?"Schlitten f\u00e4hrt":"Schlitten wartet"):"Schlitten parkt "+tm)+(tp?"<br>"+tp.replace(" \u00b7 ",""):"")+(dv?"<br>"+dv.trim():""),key=[go,live,document.documentElement.classList.contains("darkmap"),window.gkWarn||0].join();
+    var txt=(live?(go?"Auto f\u00e4hrt":"Auto wartet"):"Auto parkt "+tm)+(tp?"<br>"+tp.replace(" \u00b7 ",""):"")+(dv?"<br>"+dv.trim():""),key=[go,live,document.documentElement.classList.contains("darkmap"),window.gkWarn||0].join();
     window.gkTeslaTxt=txt;var sm=window.gkSleigh,tgt=L.latLng(T.lat,T.lon);
-    if(!sm||sm._map!==window.gkMap){sm=window.gkSleigh=L.marker(tgt,{icon:carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}),zIndexOffset:1100}).addTo(window.gkMap);sm.bindTooltip(txt,{permanent:true,direction:"left",offset:[-44,0],className:"sltip"});sm._key=key;sm._pos=tgt}
+    if(!sm||sm._map!==window.gkMap){sm=window.gkSleigh=L.marker(tgt,{icon:carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}),zIndexOffset:1100}).addTo(window.gkMap);sm.bindTooltip(txt,{permanent:true,direction:"left",offset:[-30,0],className:"sltip"});sm._key=key;sm._pos=tgt}
     else{if(sm._key!==key){sm.setIcon(carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}));sm._key=key}sm.setTooltipContent(txt)}
     if(sm._raf)cancelAnimationFrame(sm._raf);
     var el=sm.getElement(),sv=el&&el.querySelector("svg"),RT=window.gkRouteLL;
@@ -1147,42 +1147,24 @@ function gkPlace(lat,lon,cb){var k="gk_pl_"+lat.toFixed(2)+"_"+lon.toFixed(2),c=
   fetch("https://nominatim.openstreetmap.org/reverse?format=json&zoom=14&accept-language=de&lat="+lat.toFixed(4)+"&lon="+lon.toFixed(4)).then(function(r){return r.json()}).then(function(j){var p=j&&j.address,n=p&&(p.village||p.town||p.city||p.hamlet||p.suburb);if(n){ls(k,n);cb(n)}}).catch(function(){})}
 function bearing(a,b){var p1=a[1]*Math.PI/180,p2=b[1]*Math.PI/180,dl=(b[0]-a[0])*Math.PI/180;
   var y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);return (Math.atan2(y,x)*180/Math.PI+360)%360}
-function carIcon(deg,o){
+function carIcon(deg,o){ // 1.61: weißer Tesla (Draufsicht, Front nach rechts) statt Schlitten
   o=o||{};var park=o.park,night=o.night,warn=o.warn||0;
-  function deer(y,rudolph){
-    return '<g transform="translate(0,'+y+')">'
-    +'<ellipse cx="112" cy="0" rx="13" ry="6.2" fill="#8a5a33" stroke="#5e3b1f" stroke-width=".8"/><ellipse cx="108" cy="0" rx="7" ry="4.6" fill="#a06b3f"/>'
-    +'<path d="M99 -1.5 L95 -3 M99 1.5 L95 3" stroke="#5e3b1f" stroke-width="1.6" stroke-linecap="round"/>'
-    +'<g class="lg1"><path d="M106 -6 L106 -9.5 M106 6 L106 9.5" stroke="#5e3b1f" stroke-width="2" stroke-linecap="round"/></g><g class="lg2"><path d="M117 -6 L117 -9.5 M117 6 L117 9.5" stroke="#5e3b1f" stroke-width="2" stroke-linecap="round"/></g>'
-    +'<ellipse cx="127" cy="0" rx="6.4" ry="4.6" fill="#9a6439" stroke="#5e3b1f" stroke-width=".8"/>'
-    +'<path d="M124 -3.5 C126 -9 129 -12 134 -13 M129 -9.5 L133 -7 M126 -6.5 L128 -12.5 M124 3.5 C126 9 129 12 134 13 M129 9.5 L133 7 M126 6.5 L128 12.5" fill="none" stroke="#e8d9b0" stroke-width="1.5" stroke-linecap="round"/>'
-    +'<circle cx="133" cy="0" r="'+(rudolph?3.2:1.8)+'" fill="'+(rudolph?(warn?'#ff2a2a':'#a8504c'):'#2b1a0e')+'"'+(rudolph&&warn>1?' class="nose2"':'')+'/>'+(rudolph&&warn?'<circle cx="133" cy="0" r="'+(warn>1?7:5.5)+'" fill="#ff2a2a" opacity=".35"'+(warn>1?' class="nose2"':'')+'/>':'')
-    +'<circle cx="127" cy="-3" r=".9" fill="#111"/><circle cx="127" cy="3" r=".9" fill="#111"/>'
-    +'<path d="M118 -5.8 L119.5 5.8" stroke="#d9a520" stroke-width="2.2" stroke-linecap="round"/>'
-    +'<circle cx="119" cy="0" r="1.6" fill="#ffd34a" stroke="#b37d10" stroke-width=".5"/></g>';
-  }
-  var svg='<svg class="slg'+(o.go?' go':'')+'" viewBox="0 0 150 56" width="140" height="52" xmlns="http://www.w3.org/2000/svg" style="transform:rotate('+deg+'deg);transform-origin:50% 50%;overflow:visible">'
-  +'<defs><linearGradient id="sb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e53935"/><stop offset=".55" stop-color="#c62828"/><stop offset="1" stop-color="#8e1a1a"/></linearGradient>'
-  +'<linearGradient id="sg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffe27a"/><stop offset=".5" stop-color="#e0a82e"/><stop offset="1" stop-color="#b9821a"/></linearGradient></defs>'
-  +'<ellipse cx="75" cy="30" rx="72" ry="22" fill="#000" opacity=".22"/>'
-  +'<path d="M10 9 L72 9 C80 9 85 6 86 1.5" fill="none" stroke="url(#sg)" stroke-width="3.4" stroke-linecap="round"/><path d="M10 47 L72 47 C80 47 85 50 86 54.5" fill="none" stroke="url(#sg)" stroke-width="3.4" stroke-linecap="round"/>'
-  +'<path d="M22 9 L22 14 M44 9 L44 14 M66 9 L66 14 M22 47 L22 42 M44 47 L44 42 M66 47 L66 42" stroke="#b9821a" stroke-width="2"/>'
-  +(park?'':'<path d="M96 19 L74 24 M96 37 L74 32" stroke="#5b3a1d" stroke-width="1.2"/><path d="M100 19 L100 37" stroke="#5b3a1d" stroke-width="1"/>'+deer(19,false)+deer(37,true))
-  +'<path d="M8 28 C8 17 12 13 20 12.5 L66 12.5 C76 12.5 82 18 82 28 C82 38 76 43.5 66 43.5 L20 43.5 C12 43 8 39 8 28 Z" fill="url(#sb)" stroke="url(#sg)" stroke-width="2.4"/>'
-  +'<path d="M12 28 C12 20 15 17 21 16.5 L64 16.5 C72 16.5 77 21 77 28 C77 35 72 39.5 64 39.5 L21 39.5 C15 39 12 36 12 28 Z" fill="none" stroke="#fff" stroke-width="2.6" stroke-dasharray="1.2 3.4" stroke-linecap="round" opacity=".9"/>'
-  +'<rect x="13" y="18" width="19" height="20" rx="6" fill="#2e7d32" stroke="#1b5e20" stroke-width="1"/><path d="M13 28 L32 28 M22.5 18 L22.5 38" stroke="#ffd34a" stroke-width="2"/><circle cx="22.5" cy="28" r="3.2" fill="#ffd34a"/>'
-  +'<rect x="30" y="14" width="11" height="9" rx="2" fill="#1e88e5" stroke="#0d47a1" stroke-width=".7"/><path d="M30 18.5 L41 18.5 M35.5 14 L35.5 23" stroke="#fff" stroke-width="1.3"/>'
-  +'<rect x="31" y="34" width="10" height="8" rx="2" fill="#8e24aa" stroke="#4a148c" stroke-width=".7"/><path d="M31 38 L41 38 M36 34 L36 42" stroke="#ffd34a" stroke-width="1.3"/>'
-  +'<ellipse cx="52" cy="28" rx="12" ry="11" fill="#d32f2f" stroke="#7f1515" stroke-width="1"/><path d="M42 24 C46 20.5 54 20.5 58 23" fill="none" stroke="#fff" stroke-width="2" opacity=".55"/>'
-  +'<path d="M57 24 C64 22 70 24 70 28 C70 32 64 34 57 32 Z" fill="#fff" stroke="#d9d9d9" stroke-width=".6"/>'
-  +'<circle cx="62" cy="28" r="6" fill="#f2c7a0" stroke="#c9976a" stroke-width=".6"/><path d="M58 30.5 C60 36 67 35 68 29.5 C65.5 32 61 32.5 58 30.5 Z" fill="#fff"/>'
-  +'<circle cx="60.5" cy="28" r="5.2" fill="#e53935" stroke="#9b1c1c" stroke-width=".8"/><path d="M63.5 23.8 C66 26 66 30 63.5 32.2" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/><circle cx="55" cy="28" r="2.8" fill="#fff" stroke="#e3e3e3" stroke-width=".5"/>'
-  +'<path d="M66 21 L74 17.5 M66 35 L74 38.5" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/><circle cx="75" cy="17" r="2" fill="#fff"/><circle cx="75" cy="39" r="2" fill="#fff"/>'
-  +(night?'<circle cx="7" cy="28" r="9" fill="#ffd34a" opacity=".28"/><circle cx="7" cy="28" r="3.6" fill="#fff3b0" stroke="#e0a82e" stroke-width="1"/>':'')
-  +(park?'<path d="M10 22 C18 15 32 20 40 17 C52 14 62 19 72 22 C76 25 76 31 72 34 C62 37 52 42 40 39 C32 36 18 41 10 34 C8 31 8 25 10 22 Z" fill="#fff" opacity=".93"/><circle cx="30" cy="28" r="2" fill="#dfe9f2"/><circle cx="52" cy="26" r="2.4" fill="#dfe9f2"/>':'')
-  +'<circle cx="2" cy="22" r="1" fill="#fff"/><circle cx="143" cy="48" r="1.1" fill="#fff"/><circle cx="148" cy="8" r=".9" fill="#fff"/><circle cx="5" cy="40" r=".8" fill="#fff"/>'
+  var svg='<svg class="slg'+(o.go?' go':'')+'" viewBox="0 0 100 50" width="84" height="42" xmlns="http://www.w3.org/2000/svg" style="transform:rotate('+deg+'deg);transform-origin:50% 50%;overflow:visible">'
+  +'<defs><linearGradient id="tb" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d9dde2"/><stop offset=".3" stop-color="#ffffff"/><stop offset=".7" stop-color="#f4f6f8"/><stop offset="1" stop-color="#c9ced4"/></linearGradient>'
+  +'<linearGradient id="tg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0c1116"/><stop offset=".5" stop-color="#2a3540"/><stop offset="1" stop-color="#0c1116"/></linearGradient></defs>'
+  +(warn?'<ellipse cx="50" cy="25" rx="50" ry="27" fill="#ff2a2a" opacity="'+(warn>1?.4:.25)+'"'+(warn>1?' class="nose2"':'')+'/>':'')
+  +(night&&!park?'<path d="M90 14 L128 4 L128 46 L90 36 Z" fill="#fff3b0" opacity=".35"/>':'')
+  +'<ellipse cx="50" cy="27" rx="47" ry="21" fill="#000" opacity=".28"/>'
+  +'<rect x="16" y="3.5" width="12" height="5" rx="2" fill="#222"/><rect x="70" y="3.5" width="12" height="5" rx="2" fill="#222"/><rect x="16" y="41.5" width="12" height="5" rx="2" fill="#222"/><rect x="70" y="41.5" width="12" height="5" rx="2" fill="#222"/>'
+  +'<path d="M6 25 C6 13 9 7.5 18 7 L78 6.5 C90 7 95 14 95 25 C95 36 90 43 78 43.5 L18 43 C9 42.5 6 37 6 25 Z" fill="url(#tb)" stroke="#9aa1a8" stroke-width="1"/>'
+  +'<path d="M30 10 L66 9.5 C72 12 74 18 74 25 C74 32 72 38 66 40.5 L30 40 C25 37 24 32 24 25 C24 18 25 13 30 10 Z" fill="url(#tg)"/>'
+  +'<path d="M37 12.5 L63 12.2 C66 16 67 20 67 25 C67 30 66 34 63 37.8 L37 37.5 C35 33 34.5 29 34.5 25 C34.5 21 35 17 37 12.5 Z" fill="#1a232c" opacity=".9"/>'
+  +'<path d="M40 13.5 L60 13.3" stroke="#fff" stroke-width="1" opacity=".25"/>'
+  +'<path d="M27 8.6 L23 6 M27 41.4 L23 44" stroke="#9aa1a8" stroke-width="2.4" stroke-linecap="round"/>'
+  +'<path d="M91 12 C93.5 15 94.5 18 94.8 21" stroke="'+(night?'#fffbe0':'#cfd6de')+'" stroke-width="2.4" stroke-linecap="round" fill="none"/><path d="M91 38 C93.5 35 94.5 32 94.8 29" stroke="'+(night?'#fffbe0':'#cfd6de')+'" stroke-width="2.4" stroke-linecap="round" fill="none"/>'
+  +'<path d="M7.5 13 L7.5 18 M7.5 32 L7.5 37" stroke="#d32f2f" stroke-width="2.4" stroke-linecap="round"'+(night?'':' opacity=".75"')+'/>'
   +'</svg>';
-  return L.divIcon({className:"carico",html:'<div class="slw">'+svg+'</div>',iconSize:[140,52],iconAnchor:[70,26]});
+  return L.divIcon({className:"carico",html:'<div class="slw">'+svg+'</div>',iconSize:[84,42],iconAnchor:[42,21]});
 }
 var base="map";
 function tiles(sat){
@@ -1315,9 +1297,10 @@ setInterval(function(){if(auto&&!adhocRoute&&pick(berlinParts().h)!==active)appl
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)});
 /* ---------- Neue Karte (Test): MapLibre + 3D-Auto ---------- */
 var NM={on:ls("gk_newmap")==="1",map:null,ready:false,loading:false,failed:false,car:null,flag:null,follow:ls("gk_follow")!=="0",st:null,lastTs:null,fps:0};window.gkNM=NM; // fuer Tests
+if(NM.on)setTimeout(function(){try{if(nmWebGL())nmPreload()}catch(e){}},0);
 window.gkNM=NM;
 function nmWebGL(){try{var c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&(c.getContext("webgl")||c.getContext("experimental-webgl")))}catch(e){return false}}
-function nmFail(msg){NM.failed=true;NM.on=false;gkLog("Fehler","Neue Karte: "+msg+" – zurück zur alten Karte");var d=$("nmap");if(d)d.style.display="none";$("satBtn").disabled=false;$("satBtn").style.opacity="";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;if(mini)setTimeout(function(){mini.invalidateSize();fitRoute()},50)}
+function nmFail(msg){NM.failed=true;NM.on=false;gkLog("Fehler","Neue Karte: "+msg+" – zurück zur alten Karte");var d=$("nmap");if(d)d.style.display="none";$("mini").style.visibility="";$("satBtn").disabled=false;$("satBtn").style.opacity="";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;if(mini)setTimeout(function(){mini.invalidateSize();fitRoute()},50)}
 function nmLoad(src,css){return new Promise(function(ok,no){var e=document.createElement(css?"link":"script");if(css){e.rel="stylesheet";e.href=src}else{e.src=src;e.async=true}e.onload=ok;e.onerror=function(){no(new Error("lädt nicht: "+src))};document.head.appendChild(e)})}
 function nmDark(){return document.documentElement.classList.contains("darkmap")}
 function nmWide(){return window.innerWidth>=900&&window.innerHeight>=560}
@@ -1331,21 +1314,25 @@ function nmScale(v,f){
 function nmBigNames(){var m=NM.map,f=nmWide()?1.7:1.4;(m.getStyle().layers||[]).forEach(function(l){
   if(l.type!=="symbol"||!/place|town|city|village/.test(l.id+" "+(l["source-layer"]||"")))return;
   try{var v=m.getLayoutProperty(l.id,"text-size");m.setLayoutProperty(l.id,"text-size",nmScale(v==null?16:v,f))}catch(e){}})}
+function nmPreload(){if(NM.lib)return; // 1.61: früh und parallel laden (Service Worker hält sie im Cache)
+  nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css",true).catch(function(){});
+  NM.lib=nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js");NM.lib.catch(function(){NM.lib=null});
+  NM.three=nmLoad("https://unpkg.com/three@0.147.0/build/three.min.js");NM.three.catch(function(){})}
 function nmStart(){
   if(NM.map||NM.loading||NM.failed)return;
   if(!nmWebGL()){nmFail("kein WebGL");return}
   NM.loading=true;gkLog("Info","Neue Karte wird geladen");
-  nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css",true).catch(function(){});
-  nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js").then(function(){
+  nmPreload();
+  NM.lib.then(function(){
     NM.loading=false;if(!NM.on)return;
-    var d=$("nmap");if(!d){d=document.createElement("div");d.id="nmap";$("minibox").appendChild(d)}d.style.display="";
+    var d=$("nmap");if(!d){d=document.createElement("div");d.id="nmap";$("minibox").appendChild(d)}d.style.display="";$("mini").style.visibility="hidden";
     $("satBtn").disabled=true;$("satBtn").style.opacity=".4";$("satBtn").title="Luftbild nur auf der alten Karte";
     var m=NM.map=new maplibregl.Map({container:d,style:nmStyleUrl(),center:[13.1,52.9],zoom:9,attributionControl:{compact:true},maxPitch:70});
     NM.dark=nmDark();
     m.on("error",function(e){gkLog("Fehler","Neue Karte: "+(e&&e.error&&e.error.message||"unbekannt"))});
-    m.on("dragstart",function(e){if(e.originalEvent&&NM.follow){NM.follow=false;NM.manual=false;if(ls("gk_follow")==="1")setFollow(false)}});
+    m.on("movestart",function(e){if(e.originalEvent&&NM.follow&&!NM.auto){NM.follow=false;NM.manual=false;if(ls("gk_follow")==="1")setFollow(false)}});
     m.on("style.load",function(){try{nmBigNames();NM.ready=true;nmRoute();nmCarLayer();nmRadar()}catch(e){gkLog("Fehler","Neue Karte Stil: "+e.message)}});
-    nmLoad("https://unpkg.com/three@0.147.0/build/three.min.js").then(function(){var ex="https://unpkg.com/three@0.147.0/examples/js/";return Promise.all([nmLoad(ex+"loaders/GLTFLoader.js"),nmLoad(ex+"environments/RoomEnvironment.js")]).catch(function(){gkLog("Info","GLTFLoader fehlt – einfaches 3D-Auto")})}).then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
+    NM.three.then(function(){var ex="https://unpkg.com/three@0.147.0/examples/js/";return Promise.all([nmLoad(ex+"loaders/GLTFLoader.js"),nmLoad(ex+"environments/RoomEnvironment.js")]).catch(function(){gkLog("Info","GLTFLoader fehlt – einfaches 3D-Auto")})}).then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
     requestAnimationFrame(nmLoop);
   }).catch(function(e){NM.loading=false;nmFail(e.message)});
 }
@@ -1417,7 +1404,7 @@ function nmCarLayer(){var m=NM.map;if(!m||!NM.ready||m.getLayer("gk-car"))return
       loadModel()},
     render:function(gl,mx){var s=NM.st;if(!s||!s.ll){return}
       var mc=maplibregl.MercatorCoordinate.fromLngLat([s.ll[1],s.ll[0]],0),u=mc.meterInMercatorCoordinateUnits(),z=m.getZoom(),
-        mpp=40075016.7*Math.cos(s.ll[0]*Math.PI/180)/(512*Math.pow(2,z)),k=u*Math.max(1,38*mpp/4.7); // echte 4,7 m, aber mind. ca. 38 px lang
+        mpp=40075016.7*Math.cos(s.ll[0]*Math.PI/180)/(512*Math.pow(2,z)),k=u*42*Math.min(2.2,Math.pow(2,Math.max(0,z-14)*.55))*mpp/4.7; // 1.61: 42 px, wächst beim Reinzoomen
       var M=new T3.Matrix4().makeTranslation(mc.x,mc.y,mc.z).scale(new T3.Vector3(k,-k,k)).multiply(new T3.Matrix4().makeRotationZ(-(s.hd||0)*Math.PI/180));
       var dk=nmDark();lights.visible=dk;hemi.intensity=dk?.35:.75;dl.intensity=dk?.5:1.6;
       nightMats.forEach(function(mt){mt.emissiveIntensity=(mt.userData.e0||1)*(dk?2:.6)});
@@ -1425,6 +1412,10 @@ function nmCarLayer(){var m=NM.map;if(!m||!NM.ready||m.getLayer("gk-car"))return
   NM.car=true;if(NM.svg){NM.svg.remove();NM.svg=null}gkLog("Info","Neue Karte: 3D-Auto aktiv");
 }
 /* Flüssige Bewegung: Position und Tempo weich annähern, nie rückwärts */
+/* 1.61: Auto an der Straße ausrichten (geparkt stand es sonst quer). Nur nahe der Route (<60 m). */
+function gkRoadHd(lat,lon,hd){try{var R=window.gkRouteLL;if(!R||R.pts.length<2)return hd;var sn=gkSnap(R,lat,lon);if(sn.off>60)return hd;
+  var a=gkAt(R,sn.d-15),b=gkAt(R,sn.d+15),fb=bearing([a[1],a[0]],[b[1],b[0]]),back=(fb+180)%360;
+  if(hd==null)return S&&S.flip?back:fb;var df=Math.abs(((hd-fb)%360+540)%360-180);return df<90?fb:back}catch(e){return hd}}
 function nmUpdateState(dt){var T=window.gkTesla,R=window.gkRouteLL;if(!T||!R||R.pts.length<2){NM.st=null;return}
   var s=NM.st||(NM.st={d:null,v:0,ll:null,hd:window.gkHeading||0,dir:S&&S.flip?-1:1});
   if(T.ts!==NM.lastTs){NM.lastTs=T.ts;var sn=gkSnap(R,T.lat,T.lon);s.off=sn.off>150;
@@ -1432,7 +1423,7 @@ function nmUpdateState(dt){var T=window.gkTesla,R=window.gkRouteLL;if(!T||!R||R.
     s.tv=(T.speed!=null?T.speed:0)/3.6;var age=Math.max(0,Math.min(30,(Date.now()-T.ts)/1000));s.goal=sn.d+s.dir*s.tv*age;s.goalT=performance.now();
     if(s.d==null||Math.abs(s.goal-s.d)>600)s.d=s.goal;s.tgtLL=[T.lat,T.lon];if(!s.ll)s.ll=[T.lat,T.lon]}
   var stale=(Date.now()-T.ts)/1000>30,want=stale?0:s.tv;s.v+=(want-s.v)*Math.min(1,dt*(stale?.25:.8));
-  if(s.off||!nmDriving()){var f=Math.min(1,dt*1.5);s.ll=[s.ll[0]+(s.tgtLL[0]-s.ll[0])*f,s.ll[1]+(s.tgtLL[1]-s.ll[1])*f];if(window.gkHeading!=null)s.hd=window.gkHeading;s.d=null;return}
+  if(s.off||!nmDriving()){var f=Math.min(1,dt*1.5);s.ll=[s.ll[0]+(s.tgtLL[0]-s.ll[0])*f,s.ll[1]+(s.tgtLL[1]-s.ll[1])*f];s.hd=gkRoadHd(s.ll[0],s.ll[1],window.gkHeading!=null?window.gkHeading:null)||0;s.d=null;return}
   s.goal+=s.dir*s.v*dt;var nd=s.d+s.v*s.dir*dt+(s.goal-s.d)*Math.min(1,dt*.6);if((nd-s.d)*s.dir>0)s.d=nd; // nie rückwärts
   var p=gkAt(R,s.d),q=gkAt(R,s.d+s.dir*15),h=bearing([p[1],p[0]],[q[1],q[0]]),dh=((h-s.hd)%360+540)%360-180;s.hd=(s.hd+dh*Math.min(1,dt*3)+360)%360;s.ll=p}
 var nmFr=0,nmT0=0,nmPrev=0,nmWasDrive=false,nmDarkT=0;
@@ -1453,13 +1444,13 @@ function nmLoop(ts){if(!NM.map)return;requestAnimationFrame(nmLoop);if(document.
 /* Test: Fahrt entlang der Route abspielen (Meldung alle 15 s simulierter Zeit, Zeitraffer f) */
 window.gkSimDrive=function(kmh,f,stop){if(window.gkSimT){clearInterval(window.gkSimT);window.gkSimT=null}if(stop)return "gestoppt";var R=window.gkRouteLL;if(!R)return "keine Route";
   kmh=kmh||80;f=f||1;var d=0,dir=S&&S.flip?-1:1,tot=R.cum[R.cum.length-1];if(dir<0)d=tot;
-  function tick(){var p=gkAt(R,d),q=gkAt(R,d+dir*30);window.gkHeading=bearing([p[1],p[0]],[q[1],q[0]]);window.gkTesla={lat:p[0],lon:p[1],ts:Date.now(),speed:kmh,temp_out:-1.5};window.gkTeslaTxt="Schlitten fährt<br>-1,5 °C";d+=dir*kmh/3.6*15*f;if(d<0||d>tot)window.gkSimDrive(0,0,true)}
+  function tick(){var p=gkAt(R,d),q=gkAt(R,d+dir*30);window.gkHeading=bearing([p[1],p[0]],[q[1],q[0]]);window.gkTesla={lat:p[0],lon:p[1],ts:Date.now(),speed:kmh,temp_out:-1.5};window.gkTeslaTxt="Auto fährt<br>-1,5 °C";d+=dir*kmh/3.6*15*f;if(d<0||d>tot)window.gkSimDrive(0,0,true)}
   tick();window.gkSimT=setInterval(tick,15000/f);return "läuft: "+kmh+" km/h, Faktor "+f};
 $("followBtn").addEventListener("click",function(){NM.follow=ls("gk_follow")==="1";NM.manual=NM.follow;nmWasDrive=false;gkLog("Bedienung","Neue Karte: Folgen "+(NM.follow?"an":"aus"))}); // 1.60: Folgen auch im Stand
 $("locBtn").addEventListener("click",function(){if(NM.map){NM.follow=false;NM.manual=false;nmWasDrive=false;nmOverview(true)}});
 $("radarBtn").addEventListener("click",function(){setTimeout(nmRadar,0)});
 (function(){var cb=$("newMapOn");if(!cb)return;cb.checked=NM.on;cb.addEventListener("change",function(){NM.on=cb.checked;ls("gk_newmap",NM.on?"1":"0");gkLog("Info","Neue Karte (Test): "+(NM.on?"an":"aus"));
-  if(NM.on){NM.failed=false;if(S)nmStart()}else{var d=$("nmap");if(d)d.style.display="none";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;NM.flag=null;NM.svg=null;NM.car=null;$("satBtn").disabled=false;$("satBtn").style.opacity="";if(mini){mini.invalidateSize();fitRoute()}}})})();
+  if(NM.on){NM.failed=false;if(S)nmStart()}else{var d=$("nmap");if(d)d.style.display="none";$("mini").style.visibility="";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;NM.flag=null;NM.svg=null;NM.car=null;$("satBtn").disabled=false;$("satBtn").style.opacity="";if(mini){mini.invalidateSize();fitRoute()}}})})();
 window.addEventListener("resize",function(){if(NM.map&&NM.ready&&!(nmDriving()&&NM.follow))nmOverview(false)});
 })();
 </script>
