@@ -1,0 +1,16 @@
+auto.glb – 3D-Automodell für die „Neue Karte (Test)“
+
+Grundlage: "Car Concept" aus den Khronos glTF-Sample-Assets
+Quelle:  https://github.com/KhronosGroup/glTF-Sample-Assets/tree/main/Models/CarConcept
+Urheber: Eric Chadwick, © 2024 Darmstadt Graphics Group GmbH
+         (aufgebaut auf einem gemeinfreien CC0-Modell von "Unity Fan", Sketchfab)
+Lizenz:  Creative Commons Namensnennung 4.0 International (CC BY 4.0)
+         https://creativecommons.org/licenses/by/4.0/legalcode
+Belege:  1) LICENSE.md im Modellordner ("CC-BY-4.0" für Modell und Texturen)
+         2) metadata.json im Modellordner ("license": "CC-BY-4.0", artist "Eric Chadwick")
+Die Khronos-/3D-Commerce-Logos sind von der Lizenz ausgenommen und wurden entfernt.
+
+Änderungen (Glätte-Kieker, 27.11.2026):
+- Innenraum, Motor, Kennzeichen, Wischer, Bremsen und alle Texturen (inkl. Logos) entfernt
+- Lackvariante "Pearly Swirly" als Weiß übernommen, Scheiben dunkel getönt
+- Geometrie quantisiert (KHR_mesh_quantization), 11,8 MB → 1,9 MB

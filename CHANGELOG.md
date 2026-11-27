@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.59 – 27.11.2026
+- Neue Karte (Test): Statt des Kastens fährt jetzt ein echt wirkendes weißes 3D-Auto mit glänzendem Lack, getönten Scheiben und Rädern. Weicher Schatten darunter, nachts weiche Scheinwerferkegel und rot glimmende Rücklichter. Bei kleinem Zoom wird es größer gezeigt, damit man es sieht.
+- Lädt das Modell nicht, erscheint wie bisher das einfache Auto.
+- Auf schmalen Handys verdeckt die Zeitleiste den untersten Kartenknopf (⌖) nicht mehr.
+
 ## Version 1.58 – 27.11.2026
 - Zeitleiste besser lesbar: Beschriftung unter dem Balken, Tageswechsel mit Wochentag und Trennstrich, „jetzt“ am Anfang.
 - Neu zum Ausprobieren: „Neue Karte (Test)“ in den Optionen. Stufenlos zoombar, größere Ortsnamen, echte Nachtkarte, Strecke als ein Band mit Farbverlauf, gefährliche Stellen breiter.

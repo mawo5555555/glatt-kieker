@@ -225,7 +225,7 @@ body.sheetopen #mapstatus{display:none}
 #tl button.mk:after{content:"";position:absolute;left:50%;top:-6px;margin-left:-4px;border:4px solid transparent;border-top-color:var(--fg)}
 #stB{display:block;font-size:.88rem;font-weight:700;color:var(--fg);margin-top:2px}
 #stB:empty{display:none}
-#mapctl{bottom:calc(var(--vis,0px) + 142px + env(safe-area-inset-bottom,0px))}
+#mapctl{bottom:calc(var(--vis,0px) + var(--msh,142px))}
 details.opt{padding:0}details.opt>summary{padding:14px;font-weight:700;cursor:pointer;min-height:46px}details.opt>section{margin:0 10px 10px}
 @media (min-width:900px) and (min-height:560px){#tl{height:60px;padding-bottom:24px}#tl button i{font-size:.95rem}#stB{font-size:1.1rem}#mapctl{bottom:24px}}
 </style>
@@ -294,7 +294,7 @@ details.opt{padding:0}details.opt>summary{padding:14px;font-weight:700;cursor:po
   </section>
 
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
-  <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
+  <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · 3D-Auto: „Car Concept“ von Eric Chadwick / DGG, Khronos glTF-Sample-Assets (CC BY 4.0, verändert) · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
 <section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="snowOn" style="width:22px;height:22px"> Leichter Schneefall auf der Karte</label><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="newMapOn" style="width:22px;height:22px"> Neue Karte (Test): 3D, Fahransicht, größere Ortsnamen</label></section>
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
@@ -335,7 +335,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.58",VDATE="27.11.2026";
+var VERSION="1.59",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -673,7 +673,7 @@ function drawTl(sel){
     var wdn=["So","Mo","Di","Mi","Do","Fr","Sa"][new Date(t).getDay()];if(hh===0&&k>0){b.className+=" day";b.innerHTML="<i>"+wdn+"</i>"}else if(hh%6===0&&k>0&&k<S.n-2)b.innerHTML="<i>"+hh+" Uhr</i>".replace(" Uhr",window.innerWidth<600?"":" Uhr");else if(k===0)b.innerHTML="<i>jetzt</i>";b.title=dayTime(t)+": "+NAME[lv]+(mk[k]?" · deine Fahrt":"");b.setAttribute("aria-label",b.title);
     b.addEventListener("click",function(){hour=k;$("hr").value=k;drawAll();gkLog("Bedienung","Zeitleiste: "+dayTime(t))});tl.appendChild(b)})(k);
 }
-window.gkRedrawInfo=function(){drawInfo()};[].forEach.call(document.querySelectorAll("#mapctl button[aria-label]"),function(b){if(!b.title)b.title=b.getAttribute("aria-label")});setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
+window.gkRedrawInfo=function(){drawInfo()};(function(){var ms=$("mapstatus");if(!ms)return;function fit(){var r=ms.getBoundingClientRect();if(r.height>0)document.documentElement.style.setProperty("--msh",Math.round(innerHeight-r.top+12)+"px")}if(window.ResizeObserver)new ResizeObserver(fit).observe(ms);addEventListener("resize",fit);setTimeout(fit,500)})();[].forEach.call(document.querySelectorAll("#mapctl button[aria-label]"),function(b){if(!b.title)b.title=b.getAttribute("aria-label")});setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
 window.gkForecastAt=function(lat,lon){
   if(!S||!S.cells)return null;var best=-1,bd=1e9;
   S.cells.forEach(function(c,i){var d=L.latLng(c.lat,c.lon).distanceTo(L.latLng(lat,lon));if(d<bd){bd=d;best=i}});
@@ -1295,7 +1295,7 @@ active=-1;applyAuto(true);renderCommute();
 setInterval(function(){if(auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)},300000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)});
 /* ---------- Neue Karte (Test): MapLibre + 3D-Auto ---------- */
-var NM={on:ls("gk_newmap")==="1",map:null,ready:false,loading:false,failed:false,car:null,flag:null,follow:ls("gk_follow")!=="0",st:null,lastTs:null,fps:0};
+var NM={on:ls("gk_newmap")==="1",map:null,ready:false,loading:false,failed:false,car:null,flag:null,follow:ls("gk_follow")!=="0",st:null,lastTs:null,fps:0};window.gkNM=NM; // fuer Tests
 window.gkNM=NM;
 function nmWebGL(){try{var c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&(c.getContext("webgl")||c.getContext("experimental-webgl")))}catch(e){return false}}
 function nmFail(msg){NM.failed=true;NM.on=false;gkLog("Fehler","Neue Karte: "+msg+" – zurück zur alten Karte");var d=$("nmap");if(d)d.style.display="none";$("satBtn").disabled=false;$("satBtn").style.opacity="";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;if(mini)setTimeout(function(){mini.invalidateSize();fitRoute()},50)}
@@ -1326,7 +1326,7 @@ function nmStart(){
     m.on("error",function(e){gkLog("Fehler","Neue Karte: "+(e&&e.error&&e.error.message||"unbekannt"))});
     m.on("dragstart",function(e){if(e.originalEvent&&NM.follow){NM.follow=false;if(ls("gk_follow")==="1")setFollow(false)}});
     m.on("style.load",function(){try{nmBigNames();NM.ready=true;nmRoute();nmCarLayer();nmRadar()}catch(e){gkLog("Fehler","Neue Karte Stil: "+e.message)}});
-    nmLoad("https://unpkg.com/three@0.149.0/build/three.min.js").then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
+    nmLoad("https://unpkg.com/three@0.147.0/build/three.min.js").then(function(){var ex="https://unpkg.com/three@0.147.0/examples/js/";return Promise.all([nmLoad(ex+"loaders/GLTFLoader.js"),nmLoad(ex+"environments/RoomEnvironment.js")]).catch(function(){gkLog("Info","GLTFLoader fehlt – einfaches 3D-Auto")})}).then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
     requestAnimationFrame(nmLoop);
   }).catch(function(e){NM.loading=false;nmFail(e.message)});
 }
@@ -1358,24 +1358,51 @@ function nmDriving(){var T=window.gkTesla;return !!(T&&Date.now()-T.ts<10*60e3&&
 function nmCarLayer(){var m=NM.map;if(!m||!NM.ready||m.getLayer("gk-car"))return;
   if(typeof THREE==="undefined"){if(!NM.svg){var e=document.createElement("div");e.innerHTML='<svg width="22" height="40" viewBox="0 0 22 40"><ellipse cx="11" cy="21" rx="10" ry="18" fill="rgba(0,0,0,.25)"/><rect x="2" y="2" width="18" height="36" rx="8" fill="#f4f5f7" stroke="#555" stroke-width="1.2"/><rect x="4.5" y="11" width="13" height="15" rx="4" fill="#1d2630"/><rect x="4" y="3" width="4" height="2" rx="1" fill="#ffe9a8"/><rect x="14" y="3" width="4" height="2" rx="1" fill="#ffe9a8"/></svg>';
     NM.svg=new maplibregl.Marker({element:e,rotationAlignment:"map",pitchAlignment:"map"}).setLngLat([0,0]).addTo(m)}return}
-  var T3=THREE,scene=new T3.Scene(),cam=new T3.Camera(),car=new T3.Group(),white=new T3.MeshLambertMaterial({color:0xf3f4f6,side:T3.DoubleSide}),glass=new T3.MeshLambertMaterial({color:0x1b232c,side:T3.DoubleSide}),blk=new T3.MeshLambertMaterial({color:0x222222,side:T3.DoubleSide});
-  function box(w,l,h,mat,x,y,z){var b=new T3.Mesh(new T3.BoxGeometry(w,l,h),mat);b.position.set(x,y,z);car.add(b);return b}
-  // Maße ca. Limousine: 1,85 breit, 4,7 lang; y = vorn
-  box(1.85,4.7,.6,white,0,0,.55);                 // Unterbau
-  var nose=box(1.8,1.2,.35,white,0,1.9,.95);nose.rotation.x=-.18; // flache Front
-  var cab=new T3.Mesh(new T3.CylinderGeometry(1,1,2.6,4,1),glass);cab.rotation.set(0,Math.PI/4,0);cab.rotation.x=Math.PI/2;cab.rotation.y=Math.PI/4;cab.scale.set(.9,1,.42);cab.position.set(0,-.2,1.05);car.add(cab); // Glasdach
-  box(1.86,1,.12,white,0,-1.95,.92);              // Heck
-  [[-.95,1.45],[.95,1.45],[-.95,-1.45],[.95,-1.45]].forEach(function(w){var r=new T3.Mesh(new T3.CylinderGeometry(.36,.36,.25,12),blk);r.rotation.z=Math.PI/2;r.position.set(w[0],w[1],.36);car.add(r)});
-  var sh=new T3.Mesh(new T3.CircleGeometry(1,24),new T3.MeshBasicMaterial({color:0,transparent:true,opacity:.28,depthWrite:false,side:T3.DoubleSide}));sh.scale.set(1.4,2.9,1);sh.position.z=.02;car.add(sh);
-  var cone=new T3.ConeGeometry(1.6,9,16,1,true),lm=new T3.MeshBasicMaterial({color:0xfff2b0,transparent:true,opacity:.22,depthWrite:false,side:T3.DoubleSide}),lights=new T3.Group();
-  [-.6,.6].forEach(function(x){var c=new T3.Mesh(cone,lm);c.rotation.x=Math.PI;c.position.set(x,2.35+4.5,.6);lights.add(c)});car.add(lights);NM.lights=lights;
-  scene.add(car);scene.add(new T3.AmbientLight(0xffffff,.65));var dl=new T3.DirectionalLight(0xffffff,.7);dl.position.set(.5,-1,2).normalize();scene.add(dl);
-  var rnd;
-  m.addLayer({id:"gk-car",type:"custom",renderingMode:"3d",onAdd:function(map,gl){rnd=new T3.WebGLRenderer({canvas:map.getCanvas(),context:gl,antialias:true});rnd.autoClear=false},
+  var T3=THREE,scene=new T3.Scene(),cam=new T3.Camera(),car=new T3.Group(),body=new T3.Group(),white=new T3.MeshLambertMaterial({color:0xf3f4f6,side:T3.DoubleSide}),glass=new T3.MeshLambertMaterial({color:0x1b232c,side:T3.DoubleSide}),blk=new T3.MeshLambertMaterial({color:0x222222,side:T3.DoubleSide});
+  car.add(body);
+  function box(w,l,h,mat,x,y,z){var b=new T3.Mesh(new T3.BoxGeometry(w,l,h),mat);b.position.set(x,y,z);body.add(b);return b}
+  // Ersatz-Auto (Low-Poly), bis das echte Modell geladen ist oder falls es fehlt; y = vorn, z = oben, Meter
+  box(1.85,4.7,.6,white,0,0,.55);
+  var nose=box(1.8,1.2,.35,white,0,1.9,.95);nose.rotation.x=-.18;
+  var cab=new T3.Mesh(new T3.CylinderGeometry(1,1,2.6,4,1),glass);cab.rotation.x=Math.PI/2;cab.rotation.y=Math.PI/4;cab.scale.set(.9,1,.42);cab.position.set(0,-.2,1.05);body.add(cab);
+  box(1.86,1,.12,white,0,-1.95,.92);
+  [[-.95,1.45],[.95,1.45],[-.95,-1.45],[.95,-1.45]].forEach(function(w){var r=new T3.Mesh(new T3.CylinderGeometry(.36,.36,.25,12),blk);r.rotation.z=Math.PI/2;r.position.set(w[0],w[1],.36);body.add(r)});
+  // Weiche Texturen aus Canvas: Schatten (Ellipse), Lichtkegel (nach vorn auslaufend), Rücklicht-Schimmer
+  function ctex(w,h,draw){var c=document.createElement("canvas");c.width=w;c.height=h;draw(c.getContext("2d"),w,h);var t=new T3.CanvasTexture(c);t.encoding=T3.sRGBEncoding;return t}
+  var shT=ctex(64,128,function(g,w,h){g.translate(w/2,h/2);g.scale(1,2);var r=g.createRadialGradient(0,0,4,0,0,w/2);r.addColorStop(0,"rgba(0,0,0,.55)");r.addColorStop(.6,"rgba(0,0,0,.35)");r.addColorStop(1,"rgba(0,0,0,0)");g.fillStyle=r;g.beginPath();g.arc(0,0,w/2,0,7);g.fill()});
+  var sh=new T3.Mesh(new T3.PlaneGeometry(2.6,5.6),new T3.MeshBasicMaterial({map:shT,transparent:true,depthWrite:false}));sh.position.z=.03;car.add(sh);
+  var beamT=ctex(128,256,function(g,w,h){var gr=g.createLinearGradient(0,h,0,0);gr.addColorStop(0,"rgba(255,244,205,.9)");gr.addColorStop(.35,"rgba(255,240,190,.45)");gr.addColorStop(1,"rgba(255,236,180,0)");
+    g.fillStyle=gr;g.filter="blur(6px)";g.beginPath();g.moveTo(w*.42,h);g.lineTo(w*.58,h);g.lineTo(w*.98,0);g.lineTo(w*.02,0);g.closePath();g.fill()});
+  var beamM=new T3.MeshBasicMaterial({map:beamT,transparent:true,depthWrite:false,blending:T3.AdditiveBlending,opacity:.75}),lights=new T3.Group();
+  [-.62,.62].forEach(function(x){var b=new T3.Mesh(new T3.PlaneGeometry(5,14),beamM);b.position.set(x*1.4,2.3+7,.06);b.rotation.z=x*.05;lights.add(b)});
+  var tailT=ctex(64,64,function(g,w,h){var r=g.createRadialGradient(w/2,h/2,1,w/2,h/2,w/2);r.addColorStop(0,"rgba(255,40,30,.9)");r.addColorStop(1,"rgba(255,0,0,0)");g.fillStyle=r;g.fillRect(0,0,w,h)});
+  var tailM=new T3.MeshBasicMaterial({map:tailT,transparent:true,depthWrite:false,blending:T3.AdditiveBlending});
+  [-.6,.6].forEach(function(x){var t=new T3.Mesh(new T3.PlaneGeometry(1.4,1.1),tailM);t.position.set(x,-2.45,.08);lights.add(t)});
+  car.add(lights);NM.lights=lights;
+  scene.add(car);var hemi=new T3.HemisphereLight(0xffffff,0x8d8a80,.75),dl=new T3.DirectionalLight(0xffffff,1.6);dl.position.set(-1.5,-2,4);scene.add(hemi);scene.add(dl);
+  var nightMats=[],rnd,envOk=false;
+  var paint=new T3.MeshStandardMaterial({name:"Lack",color:0xeceef0,roughness:.2,metalness:.05,envMapIntensity:1.1,side:T3.DoubleSide}); // Klarlack-Shader war auf manchen GPUs schwarz
+  var glassM=new T3.MeshStandardMaterial({name:"Scheibe",color:0x080b0e,roughness:.06,metalness:.5,envMapIntensity:.8,side:T3.DoubleSide});
+  var tries=0;function loadModel(){if(!T3.GLTFLoader){if(++tries<30)setTimeout(loadModel,500);return} // Loader lädt evtl. noch
+    new T3.GLTFLoader().load("models/auto.glb",function(g){try{var o=new T3.Group();o.add(g.scene);g.scene.rotation.x=Math.PI/2;o.updateMatrixWorld(true);var bb=new T3.Box3().setFromObject(o),sz=bb.getSize(new T3.Vector3()),ctr=bb.getCenter(new T3.Vector3());
+        // glTF ist y-oben → aufrichten (z oben), Front zeigt dann nach -y → um 180° drehen, auf 4,7 m Länge bringen, Räder auf den Boden
+        var f=4.7/Math.max(sz.x,sz.y),pv=new T3.Group();var o2=new T3.Group();o2.add(o);o2.position.set(-ctr.x,-ctr.y,-bb.min.z);pv.add(o2);pv.scale.setScalar(f);pv.rotation.z=sz.y>=sz.x?Math.PI:-Math.PI/2;
+        o.traverse(function(n){if(!n.isMesh)return;var mt=n.material,nm=(mt&&mt.name)||"";
+          if(/Glass/.test(nm)){n.material=glassM}
+          else if(/Paint/.test(nm)){n.material=paint}
+          else if(/Brakelight|Signallight|Headlight/.test(nm)){mt.userData.e0=mt.emissiveIntensity;nightMats.push(mt)}});
+        while(body.children.length)body.remove(body.children[0]);body.add(pv);NM.carModel=true;NM.carObj=pv;gkLog("Info","Neue Karte: Auto-Modell geladen")}catch(e){gkLog("Fehler","Auto-Modell: "+e.message)}},
+      undefined,function(e){gkLog("Fehler","Auto-Modell nicht geladen – einfaches Auto bleibt ("+((e&&e.message)||"Netz")+")")})}
+  m.addLayer({id:"gk-car",type:"custom",renderingMode:"3d",onAdd:function(map,gl){rnd=new T3.WebGLRenderer({canvas:map.getCanvas(),context:gl,antialias:true});rnd.autoClear=false;rnd.outputEncoding=T3.sRGBEncoding;
+      try{if(T3.RoomEnvironment){var pm=new T3.PMREMGenerator(rnd);scene.environment=pm.fromScene(new T3.RoomEnvironment(),.04).texture;pm.dispose();envOk=true}}catch(e){gkLog("Info","Auto: keine Umgebungsspiegelung")}
+      loadModel()},
     render:function(gl,mx){var s=NM.st;if(!s||!s.ll){return}
-      var mc=maplibregl.MercatorCoordinate.fromLngLat([s.ll[1],s.ll[0]],0),u=mc.meterInMercatorCoordinateUnits(),z=m.getZoom(),k=u*Math.max(6,Math.pow(2,16.5-z)*6);
+      var mc=maplibregl.MercatorCoordinate.fromLngLat([s.ll[1],s.ll[0]],0),u=mc.meterInMercatorCoordinateUnits(),z=m.getZoom(),
+        mpp=40075016.7*Math.cos(s.ll[0]*Math.PI/180)/(512*Math.pow(2,z)),k=u*Math.max(1,38*mpp/4.7); // echte 4,7 m, aber mind. ca. 38 px lang
       var M=new T3.Matrix4().makeTranslation(mc.x,mc.y,mc.z).scale(new T3.Vector3(k,-k,k)).multiply(new T3.Matrix4().makeRotationZ(-(s.hd||0)*Math.PI/180));
-      lights.visible=nmDark();cam.projectionMatrix=new T3.Matrix4().fromArray(mx).multiply(M);rnd.resetState();rnd.render(scene,cam);m.triggerRepaint()}});
+      var dk=nmDark();lights.visible=dk;hemi.intensity=dk?.35:.75;dl.intensity=dk?.5:1.6;
+      nightMats.forEach(function(mt){mt.emissiveIntensity=(mt.userData.e0||1)*(dk?2:.6)});
+      cam.projectionMatrix=new T3.Matrix4().fromArray(mx).multiply(M);rnd.resetState();rnd.render(scene,cam);m.triggerRepaint()}});
   NM.car=true;if(NM.svg){NM.svg.remove();NM.svg=null}gkLog("Info","Neue Karte: 3D-Auto aktiv");
 }
 /* Flüssige Bewegung: Position und Tempo weich annähern, nie rückwärts */
