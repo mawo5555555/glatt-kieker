@@ -134,6 +134,7 @@ html{background:var(--bg)}
 body{padding:0;overflow:hidden}
 #minibox{position:fixed;inset:0;z-index:1}
 #minibox[hidden]{display:block;visibility:hidden}
+#nmap{position:absolute;inset:0;z-index:500;background:#dde3e8}.darkmap #nmap{background:#1b1f24}.nmflag{background:rgba(255,255,255,.93);color:#13202b;font:600 13px/1.25 system-ui,sans-serif;padding:4px 8px;border-radius:8px 8px 8px 0;box-shadow:0 2px 6px rgba(0,0,0,.3);white-space:nowrap;pointer-events:none}.darkmap .nmflag{background:rgba(20,28,36,.92);color:#eef}
 #mini{height:100%;width:100%;border-radius:0;box-shadow:none!important}
 #mapctl{position:fixed;right:12px;z-index:4;display:flex;flex-direction:column;gap:8px;bottom:calc(var(--vis,230px) + 12px);transition:bottom .3s}
 #mapctl button{width:46px;padding:0;font-size:20px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
@@ -214,16 +215,19 @@ body.sheetopen #mapstatus{display:none}
 .legend i{display:inline-block;width:18px;height:6px;border-radius:3px;margin-right:4px;vertical-align:middle}
 /* 1.57 Paket D: Ablesbarkeit */
 #mapstatus{flex-wrap:wrap}
-#tl{flex:1 1 100%;display:flex;gap:2px;height:30px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#tl{flex:1 1 100%;display:flex;gap:2px;height:46px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:5px 6px 20px;box-shadow:0 2px 8px rgba(0,0,0,.3);position:relative}
 #tl:empty{display:none}
-#tl button{flex:1;min-width:0;min-height:0;padding:0;border:0;border-radius:3px;position:relative;font-size:.6rem;color:#fff;font-weight:700;line-height:1}
-#tl button.sel{outline:3px solid var(--fg);outline-offset:-1px;z-index:1}
+#tl button{flex:1;min-width:0;min-height:0;padding:0;border:0;border-radius:3px;position:relative;line-height:1;overflow:visible}
+#tl button.day{margin-left:5px}
+#tl button.day:before{content:"";position:absolute;left:-4px;top:-3px;bottom:-16px;border-left:2px solid var(--fg);opacity:.55}
+#tl button i{position:absolute;top:100%;left:0;margin-top:3px;font-style:normal;font-size:.72rem;font-weight:700;color:var(--fg);white-space:nowrap;pointer-events:none}
+#tl button.sel{outline:3px solid var(--fg);outline-offset:1px;z-index:1}
 #tl button.mk:after{content:"";position:absolute;left:50%;top:-6px;margin-left:-4px;border:4px solid transparent;border-top-color:var(--fg)}
 #stB{display:block;font-size:.88rem;font-weight:700;color:var(--fg);margin-top:2px}
 #stB:empty{display:none}
 #mapctl{bottom:calc(var(--vis,0px) + 142px + env(safe-area-inset-bottom,0px))}
 details.opt{padding:0}details.opt>summary{padding:14px;font-weight:700;cursor:pointer;min-height:46px}details.opt>section{margin:0 10px 10px}
-@media (min-width:900px) and (min-height:560px){#tl{height:44px}#tl button{font-size:.8rem}#stB{font-size:1.1rem}#mapctl{bottom:24px}}
+@media (min-width:900px) and (min-height:560px){#tl{height:60px;padding-bottom:24px}#tl button i{font-size:.95rem}#stB{font-size:1.1rem}#mapctl{bottom:24px}}
 </style>
 </head>
 <body>
@@ -292,7 +296,7 @@ details.opt{padding:0}details.opt>summary{padding:14px;font-weight:700;cursor:po
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
-<section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="snowOn" style="width:22px;height:22px"> Leichter Schneefall auf der Karte</label></section>
+<section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="snowOn" style="width:22px;height:22px"> Leichter Schneefall auf der Karte</label><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="newMapOn" style="width:22px;height:22px"> Neue Karte (Test): 3D, Fahransicht, größere Ortsnamen</label></section>
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
 <details class="card opt"><summary>Weitere Einstellungen (Tesla, Statistik, Server)</summary>
@@ -331,7 +335,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.57",VDATE="27.11.2026";
+var VERSION="1.58",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -666,7 +670,7 @@ function drawTl(sel){
   tl.innerHTML="";
   for(var k=0;k<S.n;k++)(function(k){var lv=worst(k),t=S.times[S.start+k],hh=new Date(t).getHours();
     var b=el("button",{type:"button",class:(k===sel?"sel ":"")+(mk[k]?"mk":"")});b.style.background=COL[lv];
-    if(hh%6===0)b.textContent=hh;b.title=dayTime(t)+": "+NAME[lv]+(mk[k]?" · deine Fahrt":"");b.setAttribute("aria-label",b.title);
+    var wdn=["So","Mo","Di","Mi","Do","Fr","Sa"][new Date(t).getDay()];if(hh===0&&k>0){b.className+=" day";b.innerHTML="<i>"+wdn+"</i>"}else if(hh%6===0&&k>0&&k<S.n-2)b.innerHTML="<i>"+hh+" Uhr</i>".replace(" Uhr",window.innerWidth<600?"":" Uhr");else if(k===0)b.innerHTML="<i>jetzt</i>";b.title=dayTime(t)+": "+NAME[lv]+(mk[k]?" · deine Fahrt":"");b.setAttribute("aria-label",b.title);
     b.addEventListener("click",function(){hour=k;$("hr").value=k;drawAll();gkLog("Bedienung","Zeitleiste: "+dayTime(t))});tl.appendChild(b)})(k);
 }
 window.gkRedrawInfo=function(){drawInfo()};[].forEach.call(document.querySelectorAll("#mapctl button[aria-label]"),function(b){if(!b.title)b.title=b.getAttribute("aria-label")});setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
@@ -966,7 +970,7 @@ function loadTesla(){
     if(go){var cols=["#ffd34a","#ffffff","#bfe3ff"];p.forEach(function(x,ix){var ag=Date.now()-x.ts;if(ix===0||ag>20*60e3)return;var f=1-ag/(20*60e3);
       L.marker([x.lat,x.lon],{interactive:false,keyboard:false,icon:L.divIcon({className:"stardust",html:'<span style="color:'+cols[ix%3]+';opacity:'+(0.25+0.75*f).toFixed(2)+';font-size:'+Math.round(8+9*f)+'px">✦</span>',iconSize:[0,0]}),zIndexOffset:900}).addTo(lay)})}
     var txt=(live?(go?"Schlitten f\u00e4hrt":"Schlitten wartet"):"Schlitten parkt "+tm)+(tp?"<br>"+tp.replace(" \u00b7 ",""):"")+(dv?"<br>"+dv.trim():""),key=[go,live,document.documentElement.classList.contains("darkmap"),window.gkWarn||0].join();
-    var sm=window.gkSleigh,tgt=L.latLng(T.lat,T.lon);
+    window.gkTeslaTxt=txt;var sm=window.gkSleigh,tgt=L.latLng(T.lat,T.lon);
     if(!sm||sm._map!==window.gkMap){sm=window.gkSleigh=L.marker(tgt,{icon:carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}),zIndexOffset:1100}).addTo(window.gkMap);sm.bindTooltip(txt,{permanent:true,direction:"left",offset:[-44,0],className:"sltip"});sm._key=key;sm._pos=tgt}
     else{if(sm._key!==key){sm.setIcon(carIcon(deg,{go:go,park:!live,night:key.split(",")[2]==="true",warn:window.gkWarn||0}));sm._key=key}sm.setTooltipContent(txt)}
     if(sm._raf)cancelAnimationFrame(sm._raf);
@@ -1234,6 +1238,7 @@ function drawMini(){
   window.gkCarM=carM;window.gkTeslaLayer=L.layerGroup().addTo(mini);
   if(window.loadReportsDeferred)window.loadReportsDeferred();
   if(window.loadTeslaDeferred)window.loadTeslaDeferred();
+  if(NM.on){try{if(NM.map)nmRoute();else setTimeout(nmStart,300)}catch(e){gkLog("Fehler","Neue Karte: "+e.message)}}
 }
 function setFollow(on){
   ls("gk_follow",on?"1":"0");document.documentElement.classList.toggle("follow",on);$("followBtn").classList.toggle("on",on);
@@ -1289,6 +1294,127 @@ active=-1;applyAuto(true);renderCommute();
 // Zeitplan: alle 5 Minuten und beim Zurückkehren in die App prüfen, ob die Strecke wechseln muss
 setInterval(function(){if(auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)},300000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&auto&&!adhocRoute&&pick(berlinParts().h)!==active)applyAuto(false)});
+/* ---------- Neue Karte (Test): MapLibre + 3D-Auto ---------- */
+var NM={on:ls("gk_newmap")==="1",map:null,ready:false,loading:false,failed:false,car:null,flag:null,follow:ls("gk_follow")!=="0",st:null,lastTs:null,fps:0};
+window.gkNM=NM;
+function nmWebGL(){try{var c=document.createElement("canvas");return !!(window.WebGLRenderingContext&&(c.getContext("webgl")||c.getContext("experimental-webgl")))}catch(e){return false}}
+function nmFail(msg){NM.failed=true;NM.on=false;gkLog("Fehler","Neue Karte: "+msg+" – zurück zur alten Karte");var d=$("nmap");if(d)d.style.display="none";$("satBtn").disabled=false;$("satBtn").style.opacity="";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;if(mini)setTimeout(function(){mini.invalidateSize();fitRoute()},50)}
+function nmLoad(src,css){return new Promise(function(ok,no){var e=document.createElement(css?"link":"script");if(css){e.rel="stylesheet";e.href=src}else{e.src=src;e.async=true}e.onload=ok;e.onerror=function(){no(new Error("lädt nicht: "+src))};document.head.appendChild(e)})}
+function nmDark(){return document.documentElement.classList.contains("darkmap")}
+function nmWide(){return window.innerWidth>=900&&window.innerHeight>=560}
+function nmStyleUrl(){return "https://tiles.openfreemap.org/styles/"+(nmDark()?"dark":"liberty")}
+function nmScale(v,f){
+  if(typeof v==="number")return v*f;
+  if(v&&v.stops)return {base:v.base,stops:v.stops.map(function(s){return [s[0],typeof s[1]==="number"?s[1]*f:s[1]]})};
+  if(Array.isArray(v)){var o=v.slice(),i;if(o[0]==="interpolate"){for(i=4;i<o.length;i+=2)if(typeof o[i]==="number")o[i]*=f;return o}
+    if(o[0]==="step"){for(i=2;i<o.length;i+=2)if(typeof o[i]==="number")o[i]*=f;return o}return ["*",v,f]}
+  return v}
+function nmBigNames(){var m=NM.map,f=nmWide()?1.7:1.4;(m.getStyle().layers||[]).forEach(function(l){
+  if(l.type!=="symbol"||!/place|town|city|village/.test(l.id+" "+(l["source-layer"]||"")))return;
+  try{var v=m.getLayoutProperty(l.id,"text-size");m.setLayoutProperty(l.id,"text-size",nmScale(v==null?16:v,f))}catch(e){}})}
+function nmStart(){
+  if(NM.map||NM.loading||NM.failed)return;
+  if(!nmWebGL()){nmFail("kein WebGL");return}
+  NM.loading=true;gkLog("Info","Neue Karte wird geladen");
+  nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css",true).catch(function(){});
+  nmLoad("https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js").then(function(){
+    NM.loading=false;if(!NM.on)return;
+    var d=$("nmap");if(!d){d=document.createElement("div");d.id="nmap";$("minibox").appendChild(d)}d.style.display="";
+    $("satBtn").disabled=true;$("satBtn").style.opacity=".4";$("satBtn").title="Luftbild nur auf der alten Karte";
+    var m=NM.map=new maplibregl.Map({container:d,style:nmStyleUrl(),center:[13.1,52.9],zoom:9,attributionControl:{compact:true},maxPitch:70});
+    NM.dark=nmDark();
+    m.on("error",function(e){gkLog("Fehler","Neue Karte: "+(e&&e.error&&e.error.message||"unbekannt"))});
+    m.on("dragstart",function(e){if(e.originalEvent&&NM.follow){NM.follow=false;if(ls("gk_follow")==="1")setFollow(false)}});
+    m.on("style.load",function(){try{nmBigNames();NM.ready=true;nmRoute();nmCarLayer();nmRadar()}catch(e){gkLog("Fehler","Neue Karte Stil: "+e.message)}});
+    nmLoad("https://unpkg.com/three@0.149.0/build/three.min.js").then(function(){if(NM.ready)nmCarLayer()}).catch(function(){gkLog("Info","three.js fehlt – flacher Auto-Marker")});
+    requestAnimationFrame(nmLoop);
+  }).catch(function(e){NM.loading=false;nmFail(e.message)});
+}
+function nmRoute(){
+  if(!NM.ready||!S||!window.gkRouteLL)return;var m=NM.map,R=window.gkRouteLL,tot=R.cum[R.cum.length-1]||1;
+  var coords=R.pts.map(function(p){return [p[1],p[0]]}),stops=[],pos=0,danger=[];
+  S.segs.forEach(function(s){var lv=s.lv[hour]||0,n=s.pts.length,len=0,j;for(j=1;j<n;j++)len+=L.latLng(s.pts[j-1][1],s.pts[j-1][0]).distanceTo(L.latLng(s.pts[j][1],s.pts[j][0]));
+    var a=pos/tot,b=(pos+len)/tot;stops.push([a,COL[lv]],[b,COL[lv]]);pos+=len;if(lv>=1)danger.push({type:"Feature",properties:{c:COL[lv]},geometry:{type:"LineString",coordinates:s.pts}})});
+  var g=["interpolate",["linear"],["line-progress"]],last=-1;stops.forEach(function(s){var x=Math.min(1,Math.max(last+1e-6,s[0]));if(x>1||x<=last)return;g.push(x,s[1]);last=x});
+  if(g.length<7)g=["interpolate",["linear"],["line-progress"],0,COL[0],1,COL[0]];
+  var line={type:"Feature",properties:{},geometry:{type:"LineString",coordinates:coords}},dz={type:"FeatureCollection",features:danger};
+  if(m.getSource("gkr")){m.getSource("gkr").setData(line);m.getSource("gkd").setData(dz);m.setPaintProperty("gkr-line","line-gradient",g)}
+  else{m.addSource("gkr",{type:"geojson",data:line,lineMetrics:true});m.addSource("gkd",{type:"geojson",data:dz});
+    m.addLayer({id:"gkr-case",type:"line",source:"gkr",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":"#ffffff","line-width":["interpolate",["linear"],["zoom"],8,6,16,16],"line-opacity":.95}});
+    m.addLayer({id:"gkd-line",type:"line",source:"gkd",layout:{"line-cap":"round","line-join":"round"},paint:{"line-color":["get","c"],"line-width":["interpolate",["linear"],["zoom"],8,12,16,28],"line-opacity":.45}});
+    m.addLayer({id:"gkr-line",type:"line",source:"gkr",layout:{"line-cap":"round","line-join":"round"},paint:{"line-width":["interpolate",["linear"],["zoom"],8,3.5,16,10],"line-gradient":g}})}
+  if(!NM.follow||!nmDriving())nmOverview(false);
+}
+function nmRadar(){var m=NM.map;if(!m||!NM.ready)return;var on=ls("gk_radar")==="1";
+  try{if(m.getLayer("gk-radar"))m.removeLayer("gk-radar");if(m.getSource("gk-radar"))m.removeSource("gk-radar");
+  if(on){m.addSource("gk-radar",{type:"raster",tileSize:256,attribution:"Radar © DWD",tiles:["https://maps.dwd.de/geoserver/dwd/wms?service=WMS&version=1.3.0&request=GetMap&layers=dwd:Radar_rv_product_1x1km_ger&styles=&format=image/png&transparent=true&crs=EPSG:3857&width=256&height=256&bbox={bbox-epsg-3857}&_t="+Math.floor(Date.now()/300000)]});
+    m.addLayer({id:"gk-radar",type:"raster",source:"gk-radar",paint:{"raster-opacity":.65}},"gkr-case")}}catch(e){gkLog("Fehler","Radar neue Karte: "+e.message)}}
+function nmPad(){var tb=$("topbar"),ms=$("mapstatus"),top=(tb?tb.getBoundingClientRect().bottom:120)+14,bot=(window.gkVis>0?window.gkVis:(ms?window.innerHeight-ms.getBoundingClientRect().top:100))+14;
+  return nmWide()?{top:40,left:690,right:110,bottom:40}:{top:top,left:24,right:66,bottom:bot}}
+function nmOverview(anim){var m=NM.map,R=window.gkRouteLL;if(!m||!R)return;var b=new maplibregl.LngLatBounds();R.pts.forEach(function(p){b.extend([p[1],p[0]])});
+  m.setPadding({top:0,bottom:0,left:0,right:0});try{m.fitBounds(b,{padding:nmPad(),maxZoom:15,pitch:0,bearing:0,duration:anim?800:0})}catch(e){}}
+function nmDriving(){var T=window.gkTesla;return !!(T&&Date.now()-T.ts<10*60e3&&(T.speed!=null?T.speed>3:window.gkHeading!=null))}
+/* Fahrzeug: 3D-Auto (three.js) oder flacher SVG-Marker */
+function nmCarLayer(){var m=NM.map;if(!m||!NM.ready||m.getLayer("gk-car"))return;
+  if(typeof THREE==="undefined"){if(!NM.svg){var e=document.createElement("div");e.innerHTML='<svg width="22" height="40" viewBox="0 0 22 40"><ellipse cx="11" cy="21" rx="10" ry="18" fill="rgba(0,0,0,.25)"/><rect x="2" y="2" width="18" height="36" rx="8" fill="#f4f5f7" stroke="#555" stroke-width="1.2"/><rect x="4.5" y="11" width="13" height="15" rx="4" fill="#1d2630"/><rect x="4" y="3" width="4" height="2" rx="1" fill="#ffe9a8"/><rect x="14" y="3" width="4" height="2" rx="1" fill="#ffe9a8"/></svg>';
+    NM.svg=new maplibregl.Marker({element:e,rotationAlignment:"map",pitchAlignment:"map"}).setLngLat([0,0]).addTo(m)}return}
+  var T3=THREE,scene=new T3.Scene(),cam=new T3.Camera(),car=new T3.Group(),white=new T3.MeshLambertMaterial({color:0xf3f4f6,side:T3.DoubleSide}),glass=new T3.MeshLambertMaterial({color:0x1b232c,side:T3.DoubleSide}),blk=new T3.MeshLambertMaterial({color:0x222222,side:T3.DoubleSide});
+  function box(w,l,h,mat,x,y,z){var b=new T3.Mesh(new T3.BoxGeometry(w,l,h),mat);b.position.set(x,y,z);car.add(b);return b}
+  // Maße ca. Limousine: 1,85 breit, 4,7 lang; y = vorn
+  box(1.85,4.7,.6,white,0,0,.55);                 // Unterbau
+  var nose=box(1.8,1.2,.35,white,0,1.9,.95);nose.rotation.x=-.18; // flache Front
+  var cab=new T3.Mesh(new T3.CylinderGeometry(1,1,2.6,4,1),glass);cab.rotation.set(0,Math.PI/4,0);cab.rotation.x=Math.PI/2;cab.rotation.y=Math.PI/4;cab.scale.set(.9,1,.42);cab.position.set(0,-.2,1.05);car.add(cab); // Glasdach
+  box(1.86,1,.12,white,0,-1.95,.92);              // Heck
+  [[-.95,1.45],[.95,1.45],[-.95,-1.45],[.95,-1.45]].forEach(function(w){var r=new T3.Mesh(new T3.CylinderGeometry(.36,.36,.25,12),blk);r.rotation.z=Math.PI/2;r.position.set(w[0],w[1],.36);car.add(r)});
+  var sh=new T3.Mesh(new T3.CircleGeometry(1,24),new T3.MeshBasicMaterial({color:0,transparent:true,opacity:.28,depthWrite:false,side:T3.DoubleSide}));sh.scale.set(1.4,2.9,1);sh.position.z=.02;car.add(sh);
+  var cone=new T3.ConeGeometry(1.6,9,16,1,true),lm=new T3.MeshBasicMaterial({color:0xfff2b0,transparent:true,opacity:.22,depthWrite:false,side:T3.DoubleSide}),lights=new T3.Group();
+  [-.6,.6].forEach(function(x){var c=new T3.Mesh(cone,lm);c.rotation.x=Math.PI;c.position.set(x,2.35+4.5,.6);lights.add(c)});car.add(lights);NM.lights=lights;
+  scene.add(car);scene.add(new T3.AmbientLight(0xffffff,.65));var dl=new T3.DirectionalLight(0xffffff,.7);dl.position.set(.5,-1,2).normalize();scene.add(dl);
+  var rnd;
+  m.addLayer({id:"gk-car",type:"custom",renderingMode:"3d",onAdd:function(map,gl){rnd=new T3.WebGLRenderer({canvas:map.getCanvas(),context:gl,antialias:true});rnd.autoClear=false},
+    render:function(gl,mx){var s=NM.st;if(!s||!s.ll){return}
+      var mc=maplibregl.MercatorCoordinate.fromLngLat([s.ll[1],s.ll[0]],0),u=mc.meterInMercatorCoordinateUnits(),z=m.getZoom(),k=u*Math.max(6,Math.pow(2,16.5-z)*6);
+      var M=new T3.Matrix4().makeTranslation(mc.x,mc.y,mc.z).scale(new T3.Vector3(k,-k,k)).multiply(new T3.Matrix4().makeRotationZ(-(s.hd||0)*Math.PI/180));
+      lights.visible=nmDark();cam.projectionMatrix=new T3.Matrix4().fromArray(mx).multiply(M);rnd.resetState();rnd.render(scene,cam);m.triggerRepaint()}});
+  NM.car=true;if(NM.svg){NM.svg.remove();NM.svg=null}gkLog("Info","Neue Karte: 3D-Auto aktiv");
+}
+/* Flüssige Bewegung: Position und Tempo weich annähern, nie rückwärts */
+function nmUpdateState(dt){var T=window.gkTesla,R=window.gkRouteLL;if(!T||!R||R.pts.length<2){NM.st=null;return}
+  var s=NM.st||(NM.st={d:null,v:0,ll:null,hd:window.gkHeading||0,dir:S&&S.flip?-1:1});
+  if(T.ts!==NM.lastTs){NM.lastTs=T.ts;var sn=gkSnap(R,T.lat,T.lon);s.off=sn.off>150;
+    if(window.gkHeading!=null&&!s.off){var rb=gkAt(R,sn.d+20),ra=gkAt(R,sn.d-20),fb=bearing([ra[1],ra[0]],[rb[1],rb[0]]),df=Math.abs(((window.gkHeading-fb)%360+540)%360-180);s.dir=df<90?1:-1}
+    s.tv=(T.speed!=null?T.speed:0)/3.6;var age=Math.max(0,Math.min(30,(Date.now()-T.ts)/1000));s.goal=sn.d+s.dir*s.tv*age;s.goalT=performance.now();
+    if(s.d==null||Math.abs(s.goal-s.d)>600)s.d=s.goal;s.tgtLL=[T.lat,T.lon];if(!s.ll)s.ll=[T.lat,T.lon]}
+  var stale=(Date.now()-T.ts)/1000>30,want=stale?0:s.tv;s.v+=(want-s.v)*Math.min(1,dt*(stale?.25:.8));
+  if(s.off||!nmDriving()){var f=Math.min(1,dt*1.5);s.ll=[s.ll[0]+(s.tgtLL[0]-s.ll[0])*f,s.ll[1]+(s.tgtLL[1]-s.ll[1])*f];if(window.gkHeading!=null)s.hd=window.gkHeading;s.d=null;return}
+  s.goal+=s.dir*s.v*dt;var nd=s.d+s.v*s.dir*dt+(s.goal-s.d)*Math.min(1,dt*.6);if((nd-s.d)*s.dir>0)s.d=nd; // nie rückwärts
+  var p=gkAt(R,s.d),q=gkAt(R,s.d+s.dir*15),h=bearing([p[1],p[0]],[q[1],q[0]]),dh=((h-s.hd)%360+540)%360-180;s.hd=(s.hd+dh*Math.min(1,dt*3)+360)%360;s.ll=p}
+var nmFr=0,nmT0=0,nmPrev=0,nmWasDrive=false,nmDarkT=0;
+function nmLoop(ts){if(!NM.map)return;requestAnimationFrame(nmLoop);if(document.hidden){nmPrev=0;return}
+  var dt=nmPrev?Math.min(.25,(ts-nmPrev)/1000):0;nmPrev=ts;nmFr++;if(ts-nmT0>1000){NM.fps=Math.round(nmFr*1000/(ts-nmT0));nmFr=0;nmT0=ts}
+  if(ts-nmDarkT>2000){nmDarkT=ts;if(NM.dark!==nmDark()&&NM.ready){NM.dark=nmDark();NM.ready=false;gkLog("Info","Neue Karte: "+(NM.dark?"Nacht":"Tag")+"stil");NM.car=null;NM.map.setStyle(nmStyleUrl(),{diff:false})}}
+  if(!NM.ready)return;try{nmUpdateState(dt)}catch(e){}
+  var s=NM.st,m=NM.map,drive=nmDriving();
+  if(NM.svg&&s&&s.ll){NM.svg.setLngLat([s.ll[1],s.ll[0]]).setRotation(s.hd)}
+  if(s&&s.ll){if(!NM.flag){var fe=document.createElement("div");fe.className="nmflag";NM.flag=new maplibregl.Marker({element:fe,anchor:"bottom-left",offset:[14,-18]}).setLngLat([0,0]).addTo(m)}
+    NM.flag.setLngLat([s.ll[1],s.ll[0]]);var tx=window.gkTeslaTxt||"";if(NM.flag._t!==tx){NM.flag._t=tx;NM.flag.getElement().innerHTML=tx.replace(/Schlitten/g,"Auto")}}
+  else if(NM.flag){NM.flag.remove();NM.flag=null}
+  if(drive&&NM.follow&&s&&s.ll){var H=m.getContainer().clientHeight;
+    if(!nmWasDrive){m.easeTo({center:[s.ll[1],s.ll[0]],zoom:16.3,pitch:55,bearing:s.hd,padding:{top:H*.45,bottom:H*.08,left:0,right:0},duration:1200});nmWasDrive=ts+1300}
+    else if(ts>nmWasDrive)m.jumpTo({center:[s.ll[1],s.ll[0]],bearing:s.hd,pitch:55})}
+  else if(nmWasDrive){nmWasDrive=false;nmOverview(true)}
+}
+/* Test: Fahrt entlang der Route abspielen (Meldung alle 15 s simulierter Zeit, Zeitraffer f) */
+window.gkSimDrive=function(kmh,f,stop){if(window.gkSimT){clearInterval(window.gkSimT);window.gkSimT=null}if(stop)return "gestoppt";var R=window.gkRouteLL;if(!R)return "keine Route";
+  kmh=kmh||80;f=f||1;var d=0,dir=S&&S.flip?-1:1,tot=R.cum[R.cum.length-1];if(dir<0)d=tot;
+  function tick(){var p=gkAt(R,d),q=gkAt(R,d+dir*30);window.gkHeading=bearing([p[1],p[0]],[q[1],q[0]]);window.gkTesla={lat:p[0],lon:p[1],ts:Date.now(),speed:kmh,temp_out:-1.5};window.gkTeslaTxt="Schlitten fährt<br>-1,5 °C";d+=dir*kmh/3.6*15*f;if(d<0||d>tot)window.gkSimDrive(0,0,true)}
+  tick();window.gkSimT=setInterval(tick,15000/f);return "läuft: "+kmh+" km/h, Faktor "+f};
+$("followBtn").addEventListener("click",function(){NM.follow=ls("gk_follow")==="1";if(NM.follow&&nmDriving())nmWasDrive=false});
+$("locBtn").addEventListener("click",function(){if(NM.map){NM.follow=false;nmWasDrive=false;nmOverview(true)}});
+$("radarBtn").addEventListener("click",function(){setTimeout(nmRadar,0)});
+(function(){var cb=$("newMapOn");if(!cb)return;cb.checked=NM.on;cb.addEventListener("change",function(){NM.on=cb.checked;ls("gk_newmap",NM.on?"1":"0");gkLog("Info","Neue Karte (Test): "+(NM.on?"an":"aus"));
+  if(NM.on){NM.failed=false;if(S)nmStart()}else{var d=$("nmap");if(d)d.style.display="none";try{if(NM.map)NM.map.remove()}catch(e){}NM.map=null;NM.ready=false;NM.flag=null;NM.svg=null;NM.car=null;$("satBtn").disabled=false;$("satBtn").style.opacity="";if(mini){mini.invalidateSize();fitRoute()}}})})();
+window.addEventListener("resize",function(){if(NM.map&&NM.ready&&!(nmDriving()&&NM.follow))nmOverview(false)});
 })();
 </script>
 </body>

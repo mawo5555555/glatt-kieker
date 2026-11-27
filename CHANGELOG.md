@@ -1,5 +1,12 @@
 # Änderungen
 
+## Version 1.58 – 27.11.2026
+- Zeitleiste besser lesbar: Beschriftung unter dem Balken, Tageswechsel mit Wochentag und Trennstrich, „jetzt“ am Anfang.
+- Neu zum Ausprobieren: „Neue Karte (Test)“ in den Optionen. Stufenlos zoombar, größere Ortsnamen, echte Nachtkarte, Strecke als ein Band mit Farbverlauf, gefährliche Stellen breiter.
+- Während der Fahrt (Tesla live) neigt sich die neue Karte, das Auto steht im unteren Drittel und die Karte blickt in Fahrtrichtung. Ziehen löst das Folgen, der Kompass-Knopf holt es zurück, ⌖ zeigt die ganze Strecke.
+- Auf der neuen Karte fährt ein kleines weißes 3D-Auto flüssig mit, nachts mit Scheinwerfern; eine Fahne zeigt Zustand und Außentemperatur.
+- Die bisherige Karte bleibt Standard. Klappt die neue Karte auf einem Gerät nicht, schaltet die App von selbst zurück. Luftbild gibt es nur auf der alten Karte.
+
 ## Version 1.57 – 27.11.2026
 - Tesla-Kopplung startet nur noch im Tesla-Browser von selbst. Am Mac/Tablet keine falschen „Ein Tesla möchte sich verbinden“-Fragen mehr; dort bei Bedarf in den Optionen „Tesla koppeln“.
 - Ein Blick reicht: Statuskarte sagt groß „Frei“, „Vorsicht ab …“ oder „Glatt – später fahren“, bei Gelb/Rot mit der nächsten freien Uhrzeit.
