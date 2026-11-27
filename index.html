@@ -335,7 +335,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.61",VDATE="27.11.2026";
+var VERSION="1.62",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -496,7 +496,7 @@ function run(rt,k0){
   compute(eff,function(m){if(id===runId)setStatus(m)}).then(function(d){
     if(id!==runId)throw new Error("__skip");
     saveCache(eff,d);d.flip=flip;S=d;hour=k0||0;$("hr").max=d.n-1;$("hr").value=hour;
-    setStatus("");gkLog("Info","Strecke geladen ("+Math.round(d.km)+" km"+(d.osm?", Brücken/Wald berücksichtigt":"")+")");show("sliderBox",true);show("result",true);drawAll();if(window.loadSalt)window.loadSalt(d);loadAlerts(d);loadOutlook(d);loadMeasure(d);
+    setStatus("");gkLog("Info","Strecke geladen ("+Math.round(d.km)+" km"+(d.osm?", Brücken/Wald berücksichtigt":"")+")");show("sliderBox",true);show("result",true);drawAll();if(window.loadSalt)window.loadSalt(d);if(window.loadSat)window.loadSat(d);loadAlerts(d);loadOutlook(d);loadMeasure(d);
   }).catch(function(e){
     if(e&&e.message==="__skip")return;
     setStatus("");
@@ -663,7 +663,7 @@ function drawInfo(w,i){
   $("stT").textContent=w===0?"Frei":(w===1?"Vorsicht "+(i===0?"jetzt":"ab "+dep.replace(/^\S+ /,"")):"Glatt – später fahren");
   var nb="";if(w>0){for(var q=i+1;q<S.n;q++)if(worst(q)===0){nb="Besser fahren: "+dayTime(S.times[S.start+q])+" (frei)";break}if(!nb)nb="Kein freies Fenster in "+S.n+" Std.";}
   $("stB").textContent=nb;drawTl(i);
-  $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt")+(S._t?" · Stand "+new Date(S._t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+(Date.now()-S._t>45*60e3?" ⚠️ veraltet":""):"");
+  $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt")+(S._t?" · Stand "+new Date(S._t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+(Date.now()-S._t>45*60e3?" ⚠️ veraltet":""):"")+(S.sat&&!S.sat.old?" · Satellit "+new Date(S.sat.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+": "+(S.sat.min==null?"bewölkt":"Boden "+S.sat.min.toFixed(1).replace(".",",")+" °C"):"");
 }
 function drawTl(sel){
   var tl=$("tl");if(!tl||!S)return;var mk={};
@@ -761,6 +761,14 @@ window.loadSalt=function(d){
   fetch(repUrl()+"/reports?lat="+((a.lat+z.lat)/2)+"&lon="+((a.lon+z.lon)/2)+"&r=0.6").then(function(r){return r.json()}).then(function(j){
     var n=applySalt(d,(j.reports||[]).filter(function(r){return r.kind==="gestreut"}));
     if(n&&S===d){gkLog("Info","Streumeldung berücksichtigt ("+n+" Abschnitt-Stunden herabgestuft)");drawAll()}
+  }).catch(function(){});
+}
+/* 1.62: Satellit-Bodentemperatur vom Server holen und einrechnen */
+window.loadSat=function(d){
+  if(!repUrl())return;
+  fetch(repUrl()+"/sat").then(function(r){return r.json()}).then(function(j){
+    if(!j||!j.sat){return}var n=applySat(d,j.sat);
+    if(S===d){gkLog("Info","Satellit "+new Date(d.sat.ts).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+": "+(d.sat.min==null?"bewölkt":"Boden min. "+d.sat.min.toFixed(1)+" °C")+(n?", "+n+" Abschnitt-Stunden hochgestuft":""));drawAll()}
   }).catch(function(){});
 }
 window.gkLogRender=function(){var b=$("logBox");if(!b)return;var l=[];try{l=JSON.parse(ls("gk_log")||"[]")}catch(e){}

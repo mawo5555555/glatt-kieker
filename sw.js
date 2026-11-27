@@ -1,5 +1,5 @@
 // Service Worker: App-Hülle aus dem Cache, Daten immer frisch aus dem Netz
-const V="gk-1.61",LIB="gk-lib-1",SHELL=["./","index.html","engine.js","manifest.webmanifest","icon-192.png","models/auto.glb"];
+const V="gk-1.62",LIB="gk-lib-1",SHELL=["./","index.html","engine.js","manifest.webmanifest","icon-192.png","models/auto.glb"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(V).then(c=>c.addAll(SHELL)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==V&&x!==LIB).map(x=>caches.delete(x)))));self.clients.claim()});
 self.addEventListener("fetch",e=>{

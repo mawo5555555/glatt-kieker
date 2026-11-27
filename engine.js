@@ -216,6 +216,25 @@ function applySalt(d,reps,nowMs){
   });
   return n;
 }
+/* 1.62: Satellit (LSA SAF, MTG MTLST): gemessene Oberflächentemperatur bei klarem Himmel.
+   Boden < 0 °C bei Luft > 0 °C -> mind. Stufe 1 für die nächsten Stunden. Misst Boden/Wiese, nicht Asphalt. */
+var SAT={maxAgeH:3,km:4,hours:3};
+function applySat(d,sat,nowMs){
+  if(!sat||!sat.zeit||d._sat)return 0;nowMs=nowMs||Date.now();var ts=Date.parse(sat.zeit),age=(nowMs-ts)/3600e3,n=0;
+  d._sat=1;d.sat={ts:ts,klar:(sat.pkt||[]).length,min:null,old:age>SAT.maxAgeH};
+  if(age<0||age>SAT.maxAgeH)return 0;
+  d.segs.forEach(function(s){
+    var mid=s.pts[Math.floor(s.pts.length/2)],best=null,bd=SAT.km*1000;
+    (sat.pkt||[]).forEach(function(p){var dd=hav([p.lon,p.lat],mid);if(dd<bd){bd=dd;best=p}});
+    if(!best)return;s.sat=best.t;if(d.sat.min==null||best.t<d.sat.min)d.sat.min=best.t;
+    if(best.t>=0)return;var h=d.w[s.cell].hourly,off=Math.round(s.midFrac*d.durMin/60);
+    for(var k=0;k<Math.min(d.n,SAT.hours);k++){
+      var ix=Math.max(0,Math.min(d.times.length-1,d.start+k+off)),air=g(h,"temperature_2m",ix,5);
+      if(air>0&&s.lv[k]<1){s.lv[k]=1;s.why[k]="Satellit misst Boden "+best.t.toFixed(1).replace(".",",")+" °C bei Luft "+air.toFixed(1).replace(".",",")+" °C – Reif/Glätte möglich (Messung Wiese/Feld, nicht Asphalt).";n++}
+    }
+  });
+  return n;
+}
 function probAt(d,k){var p=null;d.segs.forEach(function(s){if(s.pp&&s.pp[k]!=null&&s.lv[k]>=1&&(p==null||s.pp[k]>p))p=s.pp[k]});return p}
 function compute(rt,stage){
   var A=rt.from,B=rt.to,ck=A.lat+","+A.lon+">"+B.lat+","+B.lon,c=cache[ck];
