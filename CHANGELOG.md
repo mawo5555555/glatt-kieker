@@ -1,5 +1,8 @@
 # Änderungen
 
+## Version 1.56 – 27.11.2026
+- Intern: Glätte-Berechnung in eigene Datei engine.js (App und Server nutzen dieselbe), automatische Tests für Regeln und Push-Zeitplan. Keine sichtbare Änderung.
+
 ## Version 1.55 – 27.11.2026
 - Push nur noch zu den festen Zeiten aus dem Zeitplan; „Lage geändert“-Nachrichten entfallen (Schalter entfernt, Server sendet sie nicht mehr).
 
