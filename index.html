@@ -212,13 +212,25 @@ body.sheetopen #mapstatus{display:none}
 .follow #topbar,.follow #mapinfo{display:none!important}
 .legend{position:absolute;left:12px;bottom:92px;z-index:500;background:rgba(20,33,43,.85);color:#fff;border-radius:10px;padding:6px 10px;font-size:.78rem;display:flex;gap:10px}
 .legend i{display:inline-block;width:18px;height:6px;border-radius:3px;margin-right:4px;vertical-align:middle}
+/* 1.57 Paket D: Ablesbarkeit */
+#mapstatus{flex-wrap:wrap}
+#tl{flex:1 1 100%;display:flex;gap:2px;height:30px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:3px;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+#tl:empty{display:none}
+#tl button{flex:1;min-width:0;min-height:0;padding:0;border:0;border-radius:3px;position:relative;font-size:.6rem;color:#fff;font-weight:700;line-height:1}
+#tl button.sel{outline:3px solid var(--fg);outline-offset:-1px;z-index:1}
+#tl button.mk:after{content:"";position:absolute;left:50%;top:-6px;margin-left:-4px;border:4px solid transparent;border-top-color:var(--fg)}
+#stB{display:block;font-size:.88rem;font-weight:700;color:var(--fg);margin-top:2px}
+#stB:empty{display:none}
+#mapctl{bottom:calc(var(--vis,0px) + 142px + env(safe-area-inset-bottom,0px))}
+details.opt{padding:0}details.opt>summary{padding:14px;font-weight:700;cursor:pointer;min-height:46px}details.opt>section{margin:0 10px 10px}
+@media (min-width:900px) and (min-height:560px){#tl{height:44px}#tl button{font-size:.8rem}#stB{font-size:1.1rem}#mapctl{bottom:24px}}
 </style>
 </head>
 <body>
 <canvas id="bg" aria-hidden="true" hidden></canvas>
 <div id="minibox" hidden><div id="mini" role="img" aria-label="Streckenkarte"></div></div>
 <div id="topbar"><header><h1>Glätte-Kieker <span class="ver" id="ver"></span></h1></header><div id="mapchips" aria-label="Meine Fahrten"></div><div id="mapinfo" aria-label="Wetter"></div></div>
-<div id="mapstatus"><button type="button" id="stBtn" class="l0" aria-label="Glätte-Status"><span class="dot" id="stDot">…</span><span><b id="stT">Lade Strecke …</b><span id="stS"></span></span></button><button type="button" id="optBtn"><i>⚙️</i>Optionen</button></div>
+<div id="mapstatus"><div id="tl" role="group" aria-label="Zeitleiste: Stunde wählen"></div><button type="button" id="stBtn" class="l0" aria-label="Glätte-Status"><span class="dot" id="stDot">…</span><span><b id="stT">Lade Strecke …</b><span id="stB"></span><span id="stS"></span></span></button><button type="button" id="optBtn"><i>⚙️</i>Optionen</button></div>
 <div id="mapctl"><button type="button" id="repBtn" aria-label="Glätte melden">⚠</button><button type="button" id="dirBtn" aria-label="Richtung wechseln">⇄</button><button type="button" id="followBtn" aria-label="Fahrtrichtung folgen">🧭</button><button type="button" id="radarBtn" aria-label="Regenradar">🌧️</button><button type="button" id="satBtn" aria-label="Karte oder Luftbild">🛰️</button><button type="button" id="locBtn" aria-label="Strecke zeigen">⌖</button></div>
 <div id="sheet" class="closed"><div id="grip" role="button" aria-label="Fenster größer oder schließen" tabindex="0"><i></i></div><button type="button" id="shClose" aria-label="Schließen">✕</button><div id="sheetBody">
 <main>
@@ -280,13 +292,15 @@ body.sheetopen #mapstatus{display:none}
   <div class="card opt"><h2 class="sec">Auf dem Handy nutzen</h2><p class="note" id="plat"></p></div>
   <p class="note opt" id="foot">Wetterdaten: Open-Meteo.com (CC BY 4.0), DWD ICON · Routing: OSRM / FOSSGIS · Orte und Karte: © OpenStreetMap-Mitwirkende (ODbL), Kartenkacheln und Luftbild © Esri · Entwurfsregeln. <span id="verFoot"></span></p>
 </main>
-<section class="card opt" aria-label="Tesla koppeln"><h2 class="sec">Tesla koppeln</h2><p class="note">Im Tesla: „Code anzeigen“ tippen. Am iPhone den Code unten eingeben, dann hat der Tesla den Schlüssel ohne Tippen.</p><button type="button" id="pairShow">Code anzeigen (im Tesla)</button><p id="pairCode" style="font-size:2rem;font-weight:700;letter-spacing:.2em;margin:8px 0"></p><input id="pairIn" inputmode="numeric" maxlength="6" placeholder="Code vom Tesla" style="width:100%"><button type="button" id="pairSend">Tesla koppeln (am iPhone)</button><p class="note" id="pairSt"></p></section>
 <section class="card opt" aria-label="Kartenansicht"><h2 class="sec">Kartenansicht</h2><select id="darkMap"><option value="auto">Automatisch (dunkel bei Nacht)</option><option value="1">Immer dunkel</option><option value="0">Immer hell</option></select><p class="note" id="darkNote"></p><label class="f" style="display:flex;gap:10px;align-items:center;margin-top:10px"><input type="checkbox" id="snowOn" style="width:22px;height:22px"> Leichter Schneefall auf der Karte</label></section>
 <section class="card opt" aria-label="Benachrichtigungen"><h2 class="sec">Benachrichtigungen</h2><p class="note" id="pushNote"></p><div id="pushBox"></div></section>
 <section class="card opt" aria-label="Logbuch"><h2 class="sec">Logbuch</h2><p class="note">Hier steht, was die App erlebt hat (Fehler, Netz, Bedienung). Bei Problemen bitte kopieren und mir schicken.</p><textarea id="logBox" readonly rows="8" style="width:100%;font:12px/1.35 ui-monospace,Menlo,monospace"></textarea><button type="button" id="logCopy">Kopieren</button> <button type="button" id="logClear">Leeren</button></section>
+<details class="card opt"><summary>Weitere Einstellungen (Tesla, Statistik, Server)</summary>
+<section class="card opt" aria-label="Tesla koppeln"><h2 class="sec">Tesla koppeln</h2><p class="note">Im Tesla: „Code anzeigen“ tippen. Am iPhone den Code unten eingeben, dann hat der Tesla den Schlüssel ohne Tippen.</p><button type="button" id="pairShow">Code anzeigen (im Tesla)</button><p id="pairCode" style="font-size:2rem;font-weight:700;letter-spacing:.2em;margin:8px 0"></p><input id="pairIn" inputmode="numeric" maxlength="6" placeholder="Code vom Tesla" style="width:100%"><button type="button" id="pairSend">Tesla koppeln (am iPhone)</button><p class="note" id="pairSt"></p></section>
 <section class="card opt" aria-label="Tesla"><h2 class="sec">Tesla live</h2><p class="note">Tesla-Link aus der Notiz hier einfügen (ganzer Link oder nur der Schlüssel). Wird nur auf diesem Gerät gespeichert.</p><label class="f" for="rkIn">Link oder Schlüssel</label><input id="rkIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"><button type="button" id="rkSave">Speichern</button><p class="note" id="rkSt"></p></section>
 <section class="card opt" aria-label="Statistik"><h2 class="sec">Nutzung</h2><label class="note"><input type="checkbox" id="meDev"> Das ist mein Gerät, nicht mitzählen</label><div class="note" id="statSt"></div></section><section class="card opt" aria-label="Kontrolle"><h2 class="sec">Vorhersage-Kontrolle</h2><p class="note" id="calSt">Lade …</p></section>
 <section class="card opt" aria-label="Meldeserver"><h2 class="sec">Meldeserver</h2><p class="note">Adresse des Glätte-Servers, nur auf diesem Gerät gespeichert. Ohne Adresse funktionieren Meldungen nicht.</p><label class="f" for="repUrl">Adresse</label><input type="text" id="repUrl" placeholder="https://…workers.dev"><div class="btnrow"><button type="button" id="repSave">Speichern</button></div></section>
+</details>
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -317,7 +331,7 @@ document.getElementById("shClose").addEventListener("click",function(){set(0)});
 (function(){
 "use strict";
 window.ls=ls;window.gkLog=gkLog; // fuer engine.js
-var VERSION="1.56",VDATE="27.11.2026";
+var VERSION="1.57",VDATE="27.11.2026";
 var COL=["#1f9d55","#e08a00","#d63a2f"], NAME=["unbedenklich","Vorsicht","Gefahr"], SYM=["✓","!","!!"];
 var $=function(i){return document.getElementById(i)};
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
@@ -639,10 +653,23 @@ function drawInfo(w,i){
   var n=3;
   if(window.gkRadar&&window.gkRadar.msg){var rr=window.gkRadar;h+=tile(rr.lv?"l1":"","🌧️","Radar 2 Std.",rr.msg);n=2}
   $("mapinfo").style.display="none";$("mapinfo").innerHTML="";
-  $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];$("stT").textContent=$("bt").textContent;
+  $("stBtn").className="l"+w;$("stDot").textContent=SYM[w];
+  var dep=$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt");
+  $("stT").textContent=w===0?"Frei":(w===1?"Vorsicht "+(i===0?"jetzt":"ab "+dep.replace(/^\S+ /,"")):"Glatt – später fahren");
+  var nb="";if(w>0){for(var q=i+1;q<S.n;q++)if(worst(q)===0){nb="Besser fahren: "+dayTime(S.times[S.start+q])+" (frei)";break}if(!nb)nb="Kein freies Fenster in "+S.n+" Std.";}
+  $("stB").textContent=nb;drawTl(i);
   $("stS").textContent=((typeof curRt!=="undefined"&&curRt&&curRt.name)?curRt.name+" · ":"")+S.km.toFixed(0)+" km · ca. "+fmtMin(S.durMin)+" · ab "+$("hl").textContent.replace(/^jetzt \((.*)\)$/,"jetzt")+(S._t?" · Stand "+new Date(S._t).toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"})+(Date.now()-S._t>45*60e3?" ⚠️ veraltet":""):"");
 }
-window.gkRedrawInfo=function(){drawInfo()};setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
+function drawTl(sel){
+  var tl=$("tl");if(!tl||!S)return;var mk={};
+  try{if(!adhocRoute&&routes[active])for(var k=0;k<S.n;k++){var t=new Date(S.times[S.start+k]),wd=t.getDay(),h=t.getHours();slotsOf(active).forEach(function(sl){if(sl.h===h&&sl.d.indexOf(wd)>=0)mk[k]=sl})}}catch(e){}
+  tl.innerHTML="";
+  for(var k=0;k<S.n;k++)(function(k){var lv=worst(k),t=S.times[S.start+k],hh=new Date(t).getHours();
+    var b=el("button",{type:"button",class:(k===sel?"sel ":"")+(mk[k]?"mk":"")});b.style.background=COL[lv];
+    if(hh%6===0)b.textContent=hh;b.title=dayTime(t)+": "+NAME[lv]+(mk[k]?" · deine Fahrt":"");b.setAttribute("aria-label",b.title);
+    b.addEventListener("click",function(){hour=k;$("hr").value=k;drawAll();gkLog("Bedienung","Zeitleiste: "+dayTime(t))});tl.appendChild(b)})(k);
+}
+window.gkRedrawInfo=function(){drawInfo()};[].forEach.call(document.querySelectorAll("#mapctl button[aria-label]"),function(b){if(!b.title)b.title=b.getAttribute("aria-label")});setInterval(function(){if(!document.hidden&&S)drawInfo()},60000);
 window.gkForecastAt=function(lat,lon){
   if(!S||!S.cells)return null;var best=-1,bd=1e9;
   S.cells.forEach(function(c,i){var d=L.latLng(c.lat,c.lon).distanceTo(L.latLng(lat,lon));if(d<bd){bd=d;best=i}});
@@ -758,7 +785,7 @@ $("pairSend").addEventListener("click",function(){
 })();
 (function(){
 var wide=window.matchMedia&&matchMedia("(min-width:900px) and (min-height:560px)").matches;
-var car=wide||/Tesla|QtCarBrowser/i.test(navigator.userAgent);
+var car=/Tesla|QtCarBrowser/i.test(navigator.userAgent); // 1.57: nur echter Tesla-Browser koppelt automatisch, sonst per Knopf in den Optionen
 var sh=$("pairShow"),pc=$("pairCode");if(!sh||!pc)return;
 var started=false;
 function begin(){
@@ -921,9 +948,9 @@ $("rkSave").addEventListener("click",function(){var m=$("rkIn").value.match(/([0
 function loadTesla(){
   var rk=ls("gk_rk");if(!rk||!window.gkMap)return;
   function st(t){var e=$("rkSt");if(e)e.textContent=t}
-  fetch(repUrl()+"/probes?h=24&k="+rk).then(function(r){if(r.status===401){try{localStorage.removeItem("gk_rk")}catch(x){}st("Schlüssel war ungültig und wurde gelöscht. Kopplung startet …");gkLog("Fehler","Tesla: Schlüssel abgelehnt (401), gelöscht");if(window.gkPairAuto)window.gkPairAuto();throw 0}if(!r.ok){st("Tesla-Abfrage fehlgeschlagen (HTTP "+r.status+").");gkLog("Fehler","Tesla: HTTP "+r.status);throw 0}return r.json()}).then(function(j){
+  fetch(repUrl()+"/probes?h=2&k="+rk).then(function(r){if(r.status===401){try{localStorage.removeItem("gk_rk")}catch(x){}st("Schlüssel war ungültig und wurde gelöscht. Kopplung startet …");gkLog("Fehler","Tesla: Schlüssel abgelehnt (401), gelöscht");if(window.gkPairAuto)window.gkPairAuto();throw 0}if(!r.ok){st("Tesla-Abfrage fehlgeschlagen (HTTP "+r.status+").");gkLog("Fehler","Tesla: HTTP "+r.status);throw 0}return r.json()}).then(function(j){
     var p=j.probes||[],T=p[0]||null,lay=window.gkTeslaLayer;window.gkTesla=T;
-    if(!T)st("Keine Tesla-Daten der letzten 24 Stunden auf dem Server.");
+    if(!T)st("Keine Tesla-Daten der letzten 2 Stunden auf dem Server.");
     else st("Tesla-Daten ok: "+p.length+" Messungen, letzte vor "+Math.round((Date.now()-T.ts)/60000)+" Min. Karte: "+(lay?"bereit":"nicht bereit")+".");
     if(window.gkRedrawInfo)window.gkRedrawInfo();
     if(!lay||!T)return;lay.clearLayers();

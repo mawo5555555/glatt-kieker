@@ -1,5 +1,10 @@
 # Änderungen
 
+## Version 1.57 – 27.11.2026
+- Tesla-Kopplung startet nur noch im Tesla-Browser von selbst. Am Mac/Tablet keine falschen „Ein Tesla möchte sich verbinden“-Fragen mehr; dort bei Bedarf in den Optionen „Tesla koppeln“.
+- Ein Blick reicht: Statuskarte sagt groß „Frei“, „Vorsicht ab …“ oder „Glatt – später fahren“, bei Gelb/Rot mit der nächsten freien Uhrzeit.
+- Neue farbige Zeitleiste über der Statuskarte: Stunde antippen wählt die Abfahrt, eigene Fahrzeiten sind markiert. Selten Gebrauchtes (Tesla, Statistik, Server) liegt in den Optionen unter „Weitere Einstellungen“.
+
 ## Version 1.56 – 27.11.2026
 - Intern: Glätte-Berechnung in eigene Datei engine.js (App und Server nutzen dieselbe), automatische Tests für Regeln und Push-Zeitplan. Keine sichtbare Änderung.
 
